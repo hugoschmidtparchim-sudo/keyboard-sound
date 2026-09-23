@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{B31FC9C5-1AFE-4B2C-82A7-0EEF3592E636}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyboardSound.Core", "src\KeyboardSound.Core\KeyboardSound.Core.csproj", "{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyboardSound.Tests", "src\KeyboardSound.Tests\KeyboardSound.Tests.csproj", "{55806849-0050-4AD2-9E82-58E95592FFF5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KeyboardSound.App", "src\KeyboardSound.App\KeyboardSound.App.csproj", "{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55806849-0050-4AD2-9E82-58E95592FFF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55806849-0050-4AD2-9E82-58E95592FFF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55806849-0050-4AD2-9E82-58E95592FFF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55806849-0050-4AD2-9E82-58E95592FFF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{97DCDF4F-7E24-4B2D-9F13-63ECB86E2A71} = {B31FC9C5-1AFE-4B2C-82A7-0EEF3592E636}
+		{55806849-0050-4AD2-9E82-58E95592FFF5} = {B31FC9C5-1AFE-4B2C-82A7-0EEF3592E636}
+		{8230D5CC-1D81-4E49-9A15-458A2C5A3CCF} = {B31FC9C5-1AFE-4B2C-82A7-0EEF3592E636}
+	EndGlobalSection
+EndGlobal

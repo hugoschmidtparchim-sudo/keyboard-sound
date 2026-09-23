@@ -1,0 +1,141 @@
+<Window x:Class="KeyboardSound.App.Ui.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:KeyboardSound.App.Ui"
+        Title="Keyboard Sound"
+        Width="440" Height="680"
+        MinWidth="380" MinHeight="480"
+        Background="{StaticResource BackgroundBrush}"
+        Foreground="{StaticResource TextPrimaryBrush}"
+        FontFamily="{StaticResource AppFontFamily}"
+        WindowStartupLocation="CenterScreen"
+        Closing="Window_Closing">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18">
+        <StackPanel>
+
+            <TextBlock Text="Keyboard Sound" Style="{StaticResource TitleTextStyle}" FontSize="20" Margin="0,0,0,4"/>
+            <TextBlock Text="Runs in the background - the widget on your desktop is the quick control."
+                       Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+
+            <!-- CURRENT SOUND -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="CURRENT SOUND" Style="{StaticResource SectionHeaderStyle}"/>
+                    <TextBlock x:Name="CurrentPackNameText" Style="{StaticResource TitleTextStyle}"/>
+                    <TextBlock x:Name="CurrentPackDescriptionText" Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- VOLUME -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="VOLUME" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                        <TextBlock x:Name="VolumeValueText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Slider x:Name="VolumeSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+                            ValueChanged="VolumeSlider_ValueChanged"/>
+                </StackPanel>
+            </Border>
+
+            <!-- SOUND ON/OFF -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="SOUND" Style="{StaticResource SectionHeaderStyle}"/>
+                        <TextBlock Text="Toggle keyboard sound playback on or off." Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                    </StackPanel>
+                    <CheckBox x:Name="SoundEnabledCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                              Content="Enabled" Foreground="{StaticResource TextPrimaryBrush}"
+                              Checked="SoundEnabledCheckBox_Changed" Unchecked="SoundEnabledCheckBox_Changed"/>
+                </Grid>
+            </Border>
+
+            <!-- KEY MODE -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="KEY MODE" Style="{StaticResource SectionHeaderStyle}"/>
+                    <RadioButton x:Name="AllKeysRadio" Content="All Keys" GroupName="KeyMode"
+                                 Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"
+                                 Checked="KeyModeRadio_Changed"/>
+                    <RadioButton x:Name="CustomKeysRadio" Content="Custom Keys" GroupName="KeyMode"
+                                 Foreground="{StaticResource TextPrimaryBrush}"
+                                 Checked="KeyModeRadio_Changed"/>
+
+                    <StackPanel x:Name="CustomKeysPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                        <TextBlock Text="Sounds play only for the keys enabled below."
+                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <WrapPanel x:Name="CustomKeysWrapPanel"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- SOUND PACKS -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="SOUND PACKS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                        <TextBlock Text="star = favorite" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <ItemsControl x:Name="SoundPackList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type ui:SoundPackRow}">
+                                <Border Style="{StaticResource ListRowStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Name}" Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
+                                            <TextBlock Text="{Binding SampleCount, StringFormat='{}{0} samples'}"
+                                                       Style="{StaticResource MutedTextStyle}"/>
+                                        </StackPanel>
+
+                                        <Button Grid.Column="1" Tag="{Binding Id}" Click="FavoriteButton_Click"
+                                                Width="32" Height="32" Margin="0,0,8,0"
+                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
+                                                FontSize="16" Foreground="{StaticResource AccentBrush}"/>
+
+                                        <Button Grid.Column="2" Tag="{Binding Id}" Click="ActivateButton_Click"
+                                                Content="{Binding IsActive, Converter={StaticResource ActiveLabelConverter}}"
+                                                Style="{StaticResource GhostButtonStyle}"
+                                                IsEnabled="{Binding IsActive, Converter={StaticResource InverseBoolConverter}}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- SETTINGS -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="SETTINGS" Style="{StaticResource SectionHeaderStyle}"/>
+
+                    <CheckBox x:Name="StartWithWindowsCheckBox" Content="Start with Windows"
+                              Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"
+                              Checked="StartWithWindowsCheckBox_Changed" Unchecked="StartWithWindowsCheckBox_Changed"/>
+
+                    <CheckBox x:Name="WidgetVisibleCheckBox" Content="Show desktop widget"
+                              Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"
+                              Checked="WidgetVisibleCheckBox_Changed" Unchecked="WidgetVisibleCheckBox_Changed"/>
+
+                    <CheckBox x:Name="DebugLoggingCheckBox" Content="Debug logging"
+                              Foreground="{StaticResource TextPrimaryBrush}"
+                              Checked="DebugLoggingCheckBox_Changed" Unchecked="DebugLoggingCheckBox_Changed"/>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

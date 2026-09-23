@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\KeyboardSound.Core\KeyboardSound.Core.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>KeyboardSound</AssemblyName>
+    <RootNamespace>KeyboardSound.App</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <SelfContained>false</SelfContained>
+    <!-- WFAC010: WinForms' high-DPI analyzer flags the manifest's dpiAware setting, but DPI
+         here is driven by WPF (which reads the manifest directly); WinForms is only used for
+         the tray icon, which has no DPI-sensitive UI of its own. -->
+    <NoWarn>WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\assets\soundpacks\**\*" LinkBase="soundpacks">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>soundpacks\%(RecursiveDir)%(Filename)%(Extension)</Link>
+    </None>
+  </ItemGroup>
+
+</Project>

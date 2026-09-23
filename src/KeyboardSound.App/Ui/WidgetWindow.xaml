@@ -1,0 +1,36 @@
+<Window x:Class="KeyboardSound.App.Ui.WidgetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Keyboard Sound"
+        Width="64" Height="64"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize"
+        WindowStartupLocation="Manual"
+        UseLayoutRounding="True">
+    <Border x:Name="RootBorder"
+            CornerRadius="{StaticResource WidgetCornerRadius}"
+            Background="{StaticResource SurfaceBrush}"
+            BorderBrush="{StaticResource AccentBrush}"
+            BorderThickness="2"
+            Opacity="0.96"
+            MouseLeftButtonDown="RootBorder_MouseLeftButtonDown"
+            ToolTip="Keyboard Sound - click to open, drag to move">
+        <Grid>
+            <TextBlock Text="&#x2328;"
+                       FontSize="26"
+                       Foreground="{StaticResource TextPrimaryBrush}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"/>
+            <Ellipse x:Name="StatusDot"
+                     Width="10" Height="10"
+                     Fill="{StaticResource AccentBrush}"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom"
+                     Margin="0,0,6,6"/>
+        </Grid>
+    </Border>
+</Window>
