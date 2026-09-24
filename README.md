@@ -10,6 +10,8 @@ A lightweight Windows background app that plays keyboard-click sounds on real ke
 system-wide, controlled through a small draggable desktop widget. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the technology decision and module map.
 
+![Main window screenshot](docs/screenshot-mainwindow.png)
+
 ## Requirements
 
 - Windows 10/11
