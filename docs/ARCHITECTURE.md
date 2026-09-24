@@ -52,10 +52,14 @@ src/
 
   KeyboardSound.Tests/         xUnit tests for every non-UI module in Core.
 
-assets/soundpacks/Placeholder/ Synthetic placeholder samples (see tools/generate-placeholder-sounds.ps1).
-                                Not referenced anywhere by name in code - the SoundPackManager
-                                discovers packs purely from folder structure, so replacing this
-                                folder with real recordings requires no code changes.
+assets/soundpacks/KenneyClick/ Default pack: real CC0 samples from Kenney's "Interface Sounds"
+                                pack (kenney.nl), mapped to key categories (not raw mechanical-
+                                switch recordings, but genuine licensed audio, not synthetic).
+assets/soundpacks/Placeholder/ Synthetic fallback pack, no external assets (see
+                                tools/generate-placeholder-sounds.ps1). Neither pack is referenced
+                                by name in code - SoundPackManager discovers packs purely from
+                                folder structure, so adding/removing/replacing a pack folder
+                                requires no code changes.
 ```
 
 Data flow for a keypress:
@@ -105,6 +109,12 @@ future non-Win32 input source, or a different audio backend).
   `List<LogicalKey>`; the current UI exposes a small quick-select grid rather than a full
   virtual keyboard, but nothing about the underlying architecture assumes that - a full virtual
   keyboard view is a UI-only addition on top of `ApplicationState.SetEnabledKeys`.
+- **Sample decoding is format-pluggable, not hardcoded to .wav**: `CachedSound.Load` branches on
+  file extension - `.ogg` goes through NAudio.Vorbis (a managed Vorbis decoder, since Windows
+  Media Foundation doesn't ship Ogg support by default), everything else through NAudio's
+  built-in `AudioFileReader`. This was added because real freely-licensed sound libraries
+  (including the shipped default pack) commonly distribute as `.ogg`; adding another format
+  later is a single new branch, not a rearchitecture.
 
 ## Known limitations (this foundation loop)
 

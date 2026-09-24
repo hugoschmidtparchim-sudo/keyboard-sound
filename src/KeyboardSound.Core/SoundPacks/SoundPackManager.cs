@@ -6,14 +6,14 @@ namespace KeyboardSound.Core.SoundPacks;
 /// <summary>
 /// Discovers soundpacks on disk. A soundpack is a folder containing a "pack.json" and
 /// subfolders named after <see cref="SoundCategory"/> values (case-insensitive), each holding
-/// one or more ".wav" samples. A malformed or incomplete pack is skipped with a warning rather
-/// than failing discovery for every other pack — one broken folder must never take the whole
-/// soundpack list down.
+/// one or more ".wav" or ".ogg" samples. A malformed or incomplete pack is skipped with a
+/// warning rather than failing discovery for every other pack — one broken folder must never
+/// take the whole soundpack list down.
 /// </summary>
 public sealed class SoundPackManager
 {
     private const string MetadataFileName = "pack.json";
-    private static readonly string[] SupportedExtensions = { ".wav" };
+    private static readonly string[] SupportedExtensions = { ".wav", ".ogg" };
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

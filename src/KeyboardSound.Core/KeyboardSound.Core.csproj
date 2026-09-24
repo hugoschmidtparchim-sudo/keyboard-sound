@@ -10,6 +10,10 @@
 
   <ItemGroup>
     <PackageReference Include="NAudio" Version="2.2.1" />
+    <!-- Decodes .ogg samples (the format many freely-licensed sound libraries ship in,
+         e.g. Kenney's CC0 packs) without relying on OS codecs, which aren't guaranteed
+         to include Vorbis support. -->
+    <PackageReference Include="NAudio.Vorbis" Version="1.5.0" />
   </ItemGroup>
 
 </Project>

@@ -23,9 +23,16 @@ public sealed class CachedSound
 
     public static CachedSound Load(string filePath, WaveFormat canonicalFormat)
     {
-        using var reader = new AudioFileReader(filePath);
+        // .ogg needs a dedicated decoder (NVorbis via NAudio.Vorbis) since Windows Media
+        // Foundation doesn't ship Vorbis support out of the box; everything else (.wav, .mp3,
+        // .aiff, ...) goes through NAudio's built-in AudioFileReader.
+        var isOgg = string.Equals(Path.GetExtension(filePath), ".ogg", StringComparison.OrdinalIgnoreCase);
 
-        ISampleProvider source = reader;
+        using var reader = isOgg
+            ? (IDisposable)new NAudio.Vorbis.VorbisWaveReader(filePath)
+            : new AudioFileReader(filePath);
+        var source = (ISampleProvider)reader;
+
         if (source.WaveFormat.Channels == 1 && canonicalFormat.Channels == 2)
             source = new MonoToStereoSampleProvider(source);
         else if (source.WaveFormat.Channels == 2 && canonicalFormat.Channels == 1)
@@ -34,7 +41,7 @@ public sealed class CachedSound
         if (source.WaveFormat.SampleRate != canonicalFormat.SampleRate)
             source = new WdlResamplingSampleProvider(source, canonicalFormat.SampleRate);
 
-        var buffer = new List<float>((int)(reader.Length / 2));
+        var buffer = new List<float>();
         var readBuffer = new float[canonicalFormat.SampleRate * canonicalFormat.Channels];
         int samplesRead;
         while ((samplesRead = source.Read(readBuffer, 0, readBuffer.Length)) > 0)

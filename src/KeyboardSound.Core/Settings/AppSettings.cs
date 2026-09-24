@@ -17,7 +17,11 @@ public sealed class AppSettings
 {
     public int SchemaVersion { get; set; } = 1;
 
-    public string ActiveSoundPackId { get; set; } = "";
+    /// <summary>Empty means "no preference yet" — <c>ApplicationState</c> falls back to
+    /// discovery order. The shipped default pack id is set here so a first run (no settings
+    /// file yet) starts on the real sample pack rather than whichever pack happens to sort
+    /// first on disk.</summary>
+    public string ActiveSoundPackId { get; set; } = "kenney-click";
 
     /// <summary>0.0 - 1.0</summary>
     public double Volume { get; set; } = 0.8;
