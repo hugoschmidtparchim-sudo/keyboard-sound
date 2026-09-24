@@ -32,9 +32,12 @@ target machine.
 
 ## Soundpacks
 
-`assets\soundpacks\KenneyClick\` is the default pack: real, CC0-licensed click/interface
-samples from Kenney's "Interface Sounds" pack (kenney.nl), mapped to key categories (not raw
-mechanical-switch recordings, but genuine licensed audio). `assets\soundpacks\Placeholder\`
+`assets\soundpacks\CuratedClick\` is the default pack: 7 hand-picked real click samples
+(Crisp ASMR, Deep Thock, Soft Creamy, Snappy Thock, Whisper Soft, Warm Creamy, Ultra Crisp),
+each individually favoritable and selectable in the main window's SOUNDS section - see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#individual-sounds-and-stable-ids) for how stable
+sound ids work. `assets\soundpacks\KenneyClick\` is a second real pack (CC0-licensed
+click/interface samples from Kenney's "Interface Sounds" pack, kenney.nl). `assets\soundpacks\Placeholder\`
 is a synthetic fallback pack (no external assets, no licensing to track) kept around for quick
 local testing; regenerate it with:
 
@@ -45,7 +48,13 @@ powershell -ExecutionPolicy Bypass -File tools\generate-placeholder-sounds.ps1
 Add a real recorded soundpack later by dropping a new folder with the same `pack.json` +
 category-folder structure into `assets\soundpacks\` (or the user soundpacks directory under
 `%LOCALAPPDATA%\KeyboardSound\Soundpacks`) - nothing in the app hardcodes pack names.
-Samples may be `.wav` or `.ogg`.
+Samples may be `.wav` or `.ogg`. Give individual samples curated, permanent ids/display names
+via pack.json's optional `"sounds"` array (see ARCHITECTURE.md); otherwise ids are auto-derived
+from the file name.
+
+**Note:** soundpack files are copied into the build output at build time - after editing
+anything under `assets\soundpacks\`, run `dotnet build` before relaunching, or the app will
+run against a stale copy.
 
 ### Third-party assets
 

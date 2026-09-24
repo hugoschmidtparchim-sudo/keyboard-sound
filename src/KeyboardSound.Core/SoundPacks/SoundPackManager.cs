@@ -9,6 +9,12 @@ namespace KeyboardSound.Core.SoundPacks;
 /// one or more ".wav" or ".ogg" samples. A malformed or incomplete pack is skipped with a
 /// warning rather than failing discovery for every other pack — one broken folder must never
 /// take the whole soundpack list down.
+///
+/// Every discovered sample becomes a <see cref="Sound"/> with a stable id: if pack.json declares
+/// curated metadata for it (matched by relative file path), that id/display name is used as-is
+/// - stable even if the file is later renamed. Otherwise an id is auto-derived from
+/// (packId, category, file name), which is stable across reordering and new/removed sounds but
+/// not across a file rename.
 /// </summary>
 public sealed class SoundPackManager
 {
@@ -90,8 +96,8 @@ public sealed class SoundPackManager
         if (string.IsNullOrWhiteSpace(metadata.Name) || metadata.Name == "Unnamed Soundpack")
             metadata.Name = folderId;
 
-        var samplesByCategory = DiscoverSamples(packDir);
-        if (samplesByCategory.Count == 0)
+        var sounds = DiscoverSounds(packDir, metadata);
+        if (sounds.Count == 0)
         {
             Log.Warn($"Soundpack '{folderId}' contains no usable samples. Skipping.");
             return null;
@@ -102,29 +108,89 @@ public sealed class SoundPackManager
             Id = metadata.Id,
             RootPath = packDir,
             Metadata = metadata,
-            SamplePaths = samplesByCategory
+            Sounds = sounds
         };
     }
 
-    private static Dictionary<SoundCategory, IReadOnlyList<string>> DiscoverSamples(string packDir)
+    private static List<Sound> DiscoverSounds(string packDir, SoundPackMetadata metadata)
     {
-        var result = new Dictionary<SoundCategory, IReadOnlyList<string>>();
+        // Curated entries are matched by relative path so they survive everything except an
+        // actual file rename (see Sound.Id remarks).
+        var curatedByRelativePath = new Dictionary<string, SoundMetadata>(StringComparer.OrdinalIgnoreCase);
+        foreach (var curated in metadata.Sounds ?? Enumerable.Empty<SoundMetadata>())
+        {
+            if (!string.IsNullOrWhiteSpace(curated.File))
+                curatedByRelativePath[NormalizeRelativePath(curated.File)] = curated;
+        }
+        var matchedCuratedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        var result = new List<Sound>();
 
         foreach (var categoryDir in Directory.EnumerateDirectories(packDir))
         {
             var folderName = Path.GetFileName(categoryDir);
-            if (!Enum.TryParse<SoundCategory>(folderName, ignoreCase: true, out var category))
+            if (!Enum.TryParse<SoundCategory>(folderName, ignoreCase: true, out var folderCategory))
                 continue;
 
             var files = Directory.EnumerateFiles(categoryDir)
                 .Where(f => SupportedExtensions.Contains(Path.GetExtension(f), StringComparer.OrdinalIgnoreCase))
-                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
-                .ToList();
+                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
 
-            if (files.Count > 0)
-                result[category] = files;
+            foreach (var filePath in files)
+            {
+                var relativePath = NormalizeRelativePath(Path.GetRelativePath(packDir, filePath));
+
+                if (curatedByRelativePath.TryGetValue(relativePath, out var curated))
+                {
+                    matchedCuratedPaths.Add(relativePath);
+                    var category = Enum.TryParse<SoundCategory>(curated.Category, ignoreCase: true, out var c)
+                        ? c
+                        : folderCategory;
+                    var id = string.IsNullOrWhiteSpace(curated.Id) ? AutoId(metadata.Id, category, filePath) : curated.Id;
+                    var name = string.IsNullOrWhiteSpace(curated.DisplayName) ? AutoDisplayName(filePath) : curated.DisplayName;
+                    result.Add(new Sound
+                    {
+                        Id = id,
+                        DisplayName = name,
+                        Category = category,
+                        FilePath = filePath,
+                        PackId = metadata.Id
+                    });
+                }
+                else
+                {
+                    result.Add(new Sound
+                    {
+                        Id = AutoId(metadata.Id, folderCategory, filePath),
+                        DisplayName = AutoDisplayName(filePath),
+                        Category = folderCategory,
+                        FilePath = filePath,
+                        PackId = metadata.Id
+                    });
+                }
+            }
         }
 
+        foreach (var unmatched in curatedByRelativePath.Keys.Except(matchedCuratedPaths, StringComparer.OrdinalIgnoreCase))
+            Log.Warn($"Soundpack '{metadata.Id}': pack.json references sound file '{unmatched}' which was not found on disk. Ignoring that entry.");
+
         return result;
+    }
+
+    private static string NormalizeRelativePath(string path) =>
+        path.Replace('\\', '/').TrimStart('/');
+
+    private static string AutoId(string packId, SoundCategory category, string filePath)
+    {
+        var stem = Path.GetFileNameWithoutExtension(filePath);
+        var sanitized = new string(stem.Select(ch => char.IsLetterOrDigit(ch) ? char.ToLowerInvariant(ch) : '_').ToArray());
+        return $"{packId}_{category.ToString().ToLowerInvariant()}_{sanitized}";
+    }
+
+    private static string AutoDisplayName(string filePath)
+    {
+        var stem = Path.GetFileNameWithoutExtension(filePath);
+        var withSpaces = stem.Replace('_', ' ').Replace('-', ' ');
+        return System.Globalization.CultureInfo.InvariantCulture.TextInfo.ToTitleCase(withSpaces);
     }
 }

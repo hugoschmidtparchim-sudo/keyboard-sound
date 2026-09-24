@@ -5,6 +5,7 @@ using KeyboardSound.App.Configuration;
 using KeyboardSound.Core.AppState;
 using KeyboardSound.Core.Input;
 using KeyboardSound.Core.Settings;
+using KeyboardSound.Core.SoundPacks;
 
 namespace KeyboardSound.App.Ui;
 
@@ -29,6 +30,7 @@ public partial class MainWindow : Window
 
     private readonly ApplicationState _appState;
     private bool _isInitializing;
+    private bool _showFavoriteSoundsOnly;
 
     public MainWindow(ApplicationState appState)
     {
@@ -72,11 +74,72 @@ public partial class MainWindow : Window
             DebugLoggingCheckBox.IsChecked = settings.DebugLogging;
 
             RefreshPackList();
+            RefreshSoundList();
         }
         finally
         {
             _isInitializing = false;
         }
+    }
+
+    private void RefreshSoundList()
+    {
+        var settings = _appState.Settings.Current;
+        var sounds = _appState.GetActivePackSounds(SoundCategory.Normal);
+
+        var rows = sounds
+            .Select(s => new SoundRow
+            {
+                Id = s.Id,
+                DisplayName = s.DisplayName,
+                IsFavorite = settings.FavoriteSoundIds.Contains(s.Id),
+                IsSelected = settings.SelectedSoundId == s.Id
+            })
+            .Where(r => !_showFavoriteSoundsOnly || r.IsFavorite)
+            .OrderByDescending(r => r.IsFavorite)
+            .ThenBy(r => r.DisplayName)
+            .ToList();
+
+        SoundList.ItemsSource = rows;
+        NoSoundsText.Visibility = (rows.Count == 0 && _showFavoriteSoundsOnly) ? Visibility.Visible : Visibility.Collapsed;
+
+        var accentStyle = (Style)System.Windows.Application.Current.Resources["AccentButtonStyle"];
+        var ghostStyle = (Style)System.Windows.Application.Current.Resources["GhostButtonStyle"];
+        ShowAllSoundsButton.Style = _showFavoriteSoundsOnly ? ghostStyle : accentStyle;
+        ShowFavoriteSoundsButton.Style = _showFavoriteSoundsOnly ? accentStyle : ghostStyle;
+    }
+
+    private void ShowAllSounds_Click(object sender, RoutedEventArgs e)
+    {
+        _showFavoriteSoundsOnly = false;
+        RefreshSoundList();
+    }
+
+    private void ShowFavoriteSounds_Click(object sender, RoutedEventArgs e)
+    {
+        _showFavoriteSoundsOnly = true;
+        RefreshSoundList();
+    }
+
+    private void FavoriteSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string id) return;
+        _appState.ToggleFavoriteSound(id);
+        RefreshSoundList();
+    }
+
+    private void SelectSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string id) return;
+        _appState.SelectSound(id);
+        RefreshSoundList();
+    }
+
+    private void SoundName_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string id) return;
+        _appState.SelectSound(id);
+        RefreshSoundList();
     }
 
     private void RefreshPackList()

@@ -19,7 +19,10 @@ public interface IAudioEngine : IDisposable
     void LoadPack(SoundPackInfo pack);
 
     /// <summary>Plays one sample for the given category (fire-and-forget, overlapping with
-    /// any currently playing sounds). No-op if no pack is loaded or the category resolves to
-    /// no samples.</summary>
-    void Play(SoundCategory category);
+    /// any currently playing sounds). If <paramref name="preferredSoundId"/> names a sound
+    /// loaded for this category, that exact sound is used deterministically (the "pin a sound"
+    /// feature); otherwise a sample is picked from the category's pool (falling back to Normal,
+    /// avoiding immediate repeats). No-op if no pack is loaded or the category resolves to no
+    /// samples.</summary>
+    void Play(SoundCategory category, string? preferredSoundId = null);
 }

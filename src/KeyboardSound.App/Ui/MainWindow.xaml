@@ -117,6 +117,55 @@
                 </StackPanel>
             </Border>
 
+            <!-- SOUNDS (individual samples within the active pack) -->
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <Grid Margin="0,0,0,8">
+                        <TextBlock Text="SOUNDS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button x:Name="ShowAllSoundsButton" Content="All" Click="ShowAllSounds_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11" Margin="0,0,4,0"/>
+                            <Button x:Name="ShowFavoriteSoundsButton" Content="Favorites" Click="ShowFavoriteSounds_Click"
+                                    Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11"/>
+                        </StackPanel>
+                    </Grid>
+                    <TextBlock Text="Pick which sound plays for normal keys. Star to favorite, click a name to select it as your pinned sound."
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                    <ItemsControl x:Name="SoundList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type ui:SoundRow}">
+                                <Border Style="{StaticResource ListRowStyle}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Button Grid.Column="0" Tag="{Binding Id}" Click="FavoriteSoundButton_Click"
+                                                Width="28" Height="28" Margin="0,0,8,0"
+                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
+                                                FontSize="15" Foreground="{StaticResource AccentBrush}"/>
+
+                                        <TextBlock Grid.Column="1" Text="{Binding DisplayName}"
+                                                   Style="{StaticResource BodyTextStyle}" VerticalAlignment="Center"
+                                                   Cursor="Hand" MouseLeftButtonUp="SoundName_MouseLeftButtonUp" Tag="{Binding Id}"/>
+
+                                        <Button Grid.Column="2" Tag="{Binding Id}" Click="SelectSoundButton_Click"
+                                                Content="{Binding IsSelected, Converter={StaticResource SelectedLabelConverter}}"
+                                                Style="{StaticResource GhostButtonStyle}"
+                                                IsEnabled="{Binding IsSelected, Converter={StaticResource InverseBoolConverter}}"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock x:Name="NoSoundsText" Text="No favorites yet - star a sound to see it here."
+                               Style="{StaticResource MutedTextStyle}" Visibility="Collapsed" Margin="0,4,0,0"/>
+                </StackPanel>
+            </Border>
+
             <!-- SETTINGS -->
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
                 <StackPanel>

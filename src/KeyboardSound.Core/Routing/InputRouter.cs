@@ -40,7 +40,7 @@ public sealed class InputRouter : IDisposable
             return;
 
         var category = KeyCategoryMap.Resolve(evt.Key);
-        _audioEngine.Play(category);
+        _audioEngine.Play(category, settings.SelectedSoundId);
     }
 
     public void Dispose()

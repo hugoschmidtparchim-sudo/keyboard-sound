@@ -52,14 +52,17 @@ src/
 
   KeyboardSound.Tests/         xUnit tests for every non-UI module in Core.
 
-assets/soundpacks/KenneyClick/ Default pack: real CC0 samples from Kenney's "Interface Sounds"
-                                pack (kenney.nl), mapped to key categories (not raw mechanical-
-                                switch recordings, but genuine licensed audio, not synthetic).
-assets/soundpacks/Placeholder/ Synthetic fallback pack, no external assets (see
-                                tools/generate-placeholder-sounds.ps1). Neither pack is referenced
-                                by name in code - SoundPackManager discovers packs purely from
-                                folder structure, so adding/removing/replacing a pack folder
-                                requires no code changes.
+assets/soundpacks/CuratedClick/ Default pack: 7 hand-picked real samples, each with curated
+                                 metadata (stable id + display name) in pack.json - see
+                                 "Individual sounds" below.
+assets/soundpacks/KenneyClick/  Real CC0 samples from Kenney's "Interface Sounds" pack
+                                 (kenney.nl), mapped to key categories (not raw mechanical-
+                                 switch recordings, but genuine licensed audio, not synthetic).
+assets/soundpacks/Placeholder/  Synthetic fallback pack, no external assets (see
+                                 tools/generate-placeholder-sounds.ps1). No pack is referenced
+                                 by name in code - SoundPackManager discovers packs purely from
+                                 folder structure, so adding/removing/replacing a pack folder
+                                 requires no code changes.
 ```
 
 Data flow for a keypress:
@@ -69,10 +72,46 @@ LowLevelKeyboardHook (WH_KEYBOARD_LL)
   -> KeyEvent (LogicalKey, Down/Up)                      [Input]
   -> InputRouter: key-mode check, enabled-key check       [Routing]
   -> KeyCategoryMap.Resolve(key) -> SoundCategory         [SoundPacks]
-  -> IAudioEngine.Play(category)                          [Audio]
-       -> SampleSelector picks a sample (category, else Normal fallback, avoids repeats)
+  -> IAudioEngine.Play(category, preferredSoundId)        [Audio]
+       -> preferredSoundId (the pinned "selected" sound, if any) wins deterministically
+          when it resolves to a sound loaded for this category;
+       -> otherwise SampleSelector picks a sample (category, else Normal fallback, avoids repeats)
        -> CachedSound (already decoded in memory) mixed into the shared WASAPI output
 ```
+
+### Individual sounds and stable ids
+
+A soundpack isn't just "category -> file paths" - every sample is a `Sound` (`SoundPacks/Sound.cs`)
+with a **stable id**, independent of its display name, file path, or position in any list:
+
+```
+Soundpack -> Category -> Sound { Id, DisplayName, Category, FilePath }
+```
+
+A pack.json can declare curated metadata for its samples:
+
+```json
+{
+  "sounds": [
+    { "id": "crisp_asmr_01", "displayName": "Crisp ASMR", "category": "Normal", "file": "normal/crisp-asmr.wav" }
+  ]
+}
+```
+
+matched to the discovered file by relative path. A sample with no curated entry still gets a
+`Sound` record - `SoundPackManager` auto-derives `id = "{packId}_{category}_{sanitizedFileName}"`
+and a title-cased display name from the file name. Auto ids are stable across reordering and
+across new/removed sounds elsewhere in the pack, but - unlike curated ids - they do change if
+that specific file is renamed; a pack that wants fully rename-proof ids should declare them
+explicitly.
+
+`AppSettings.FavoriteSoundIds` (favorite individual sounds) and `AppSettings.SelectedSoundId`
+(pin one sound as the deterministic choice for its category) both store only this stable id -
+never a name, file path, or list index. Both are plain additive fields: an older settings.json
+that predates them simply gets the type's default (`[]` / `null`) the first time
+`System.Text.Json` deserializes it, so no explicit migration code was needed - verified by
+loading a genuinely pre-existing settings file from before this feature and confirming the app
+started cleanly and wrote the new fields with their defaults on first save.
 
 The input layer never touches audio directly, and the audio engine never touches keys - both
 only know about `SoundCategory`, which keeps either side replaceable independently (e.g. a
@@ -134,3 +173,7 @@ future non-Win32 input source, or a different audio backend).
   pause worth moving to a background task later.
 - No installer/MSIX packaging yet - only a raw publish output. Not needed for this foundation
   loop; worth adding before any real distribution.
+- Soundpack files under `assets/soundpacks/` are copied to the build output at **build time**
+  (`CopyToOutputDirectory=PreserveNewest` in the .csproj). Editing a pack.json or sample file and
+  re-launching an already-built exe without rebuilding will run against the stale copy - always
+  `dotnet build` after changing anything under `assets/`.

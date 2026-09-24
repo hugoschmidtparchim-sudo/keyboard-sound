@@ -39,6 +39,18 @@ public sealed class SettingsService
         settings.Volume = Math.Clamp(settings.Volume, 0.0, 1.0);
         settings.EnabledKeys ??= new();
         settings.FavoriteSoundPackIds ??= new();
+        settings.FavoriteSoundIds ??= new();
         settings.ActiveSoundPackId ??= "";
+
+        // Dedupe defensively (e.g. a hand-edited config, or a future bug elsewhere) - favoriting
+        // the same sound twice must never produce two entries.
+        DeduplicateInPlace(settings.FavoriteSoundPackIds);
+        DeduplicateInPlace(settings.FavoriteSoundIds);
+    }
+
+    private static void DeduplicateInPlace(List<string> ids)
+    {
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        ids.RemoveAll(id => !seen.Add(id));
     }
 }

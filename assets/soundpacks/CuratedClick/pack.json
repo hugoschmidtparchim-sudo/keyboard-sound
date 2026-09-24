@@ -1,0 +1,51 @@
+{
+  "id": "curated-click",
+  "name": "Curated Click",
+  "description": "Seven hand-picked keyboard click samples, each individually selectable and favoritable. Trimmed to remove leading silence and peak-normalized for consistent loudness; character labels (Crisp, Thock, Creamy, ASMR, ...) are descriptive based on measured loudness/brightness/decay, not marketing claims.",
+  "author": "Hugo",
+  "version": "1.0.0",
+  "sounds": [
+    {
+      "id": "crisp_asmr_01",
+      "displayName": "Crisp ASMR",
+      "category": "Normal",
+      "file": "normal/crisp-asmr.wav"
+    },
+    {
+      "id": "deep_thock_01",
+      "displayName": "Deep Thock",
+      "category": "Normal",
+      "file": "normal/deep-thock.wav"
+    },
+    {
+      "id": "soft_creamy_01",
+      "displayName": "Soft Creamy",
+      "category": "Normal",
+      "file": "normal/soft-creamy.wav"
+    },
+    {
+      "id": "snappy_thock_01",
+      "displayName": "Snappy Thock",
+      "category": "Normal",
+      "file": "normal/snappy-thock.wav"
+    },
+    {
+      "id": "whisper_soft_01",
+      "displayName": "Whisper Soft",
+      "category": "Normal",
+      "file": "normal/whisper-soft.wav"
+    },
+    {
+      "id": "warm_creamy_01",
+      "displayName": "Warm Creamy",
+      "category": "Normal",
+      "file": "normal/warm-creamy.wav"
+    },
+    {
+      "id": "ultra_crisp_01",
+      "displayName": "Ultra Crisp",
+      "category": "Normal",
+      "file": "normal/ultra-crisp.wav"
+    }
+  ]
+}

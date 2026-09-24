@@ -24,10 +24,10 @@ public sealed class NAudioEngine : IAudioEngine
     private readonly WasapiOut _output;
     private readonly MixingSampleProvider _mixer;
     private readonly VolumeSampleProvider _volumeProvider;
-    private readonly SampleSelector<CachedSound> _sampleSelector = new();
+    private readonly SampleSelector<LoadedSample> _sampleSelector = new();
 
-    private IReadOnlyDictionary<SoundCategory, IReadOnlyList<CachedSound>> _loadedSamples =
-        new Dictionary<SoundCategory, IReadOnlyList<CachedSound>>();
+    private IReadOnlyDictionary<SoundCategory, IReadOnlyList<LoadedSample>> _loadedSamples =
+        new Dictionary<SoundCategory, IReadOnlyList<LoadedSample>>();
 
     private int _activeVoiceCount;
     private readonly object _voiceCountLock = new();
@@ -53,25 +53,25 @@ public sealed class NAudioEngine : IAudioEngine
 
     public void LoadPack(SoundPackInfo pack)
     {
-        var newSamples = new Dictionary<SoundCategory, IReadOnlyList<CachedSound>>();
+        var newSamples = new Dictionary<SoundCategory, IReadOnlyList<LoadedSample>>();
 
-        foreach (var (category, paths) in pack.SamplePaths)
+        foreach (var (category, sounds) in pack.SoundsByCategory)
         {
-            var sounds = new List<CachedSound>(paths.Count);
-            foreach (var path in paths)
+            var loaded = new List<LoadedSample>(sounds.Count);
+            foreach (var sound in sounds)
             {
                 try
                 {
-                    sounds.Add(CachedSound.Load(path, CanonicalFormat));
+                    loaded.Add(new LoadedSample(sound, CachedSound.Load(sound.FilePath, CanonicalFormat)));
                 }
                 catch (Exception ex)
                 {
-                    Log.Warn($"Failed to load sample '{path}' in soundpack '{pack.Id}': {ex.Message}");
+                    Log.Warn($"Failed to load sample '{sound.FilePath}' in soundpack '{pack.Id}': {ex.Message}");
                 }
             }
 
-            if (sounds.Count > 0)
-                newSamples[category] = sounds;
+            if (loaded.Count > 0)
+                newSamples[category] = loaded;
         }
 
         // Swap the reference atomically; any in-flight Play() calls on the old dictionary
@@ -80,7 +80,7 @@ public sealed class NAudioEngine : IAudioEngine
         Log.Info($"Loaded soundpack '{pack.Id}' ({newSamples.Sum(kv => kv.Value.Count)} samples).");
     }
 
-    public void Play(SoundCategory category)
+    public void Play(SoundCategory category, string? preferredSoundId = null)
     {
         if (_disposed) return;
 
@@ -90,16 +90,28 @@ public sealed class NAudioEngine : IAudioEngine
                 return;
         }
 
-        var sample = _sampleSelector.SelectSample(category, _loadedSamples);
+        LoadedSample? sample = null;
+        if (preferredSoundId is not null && _loadedSamples.TryGetValue(category, out var categorySamples))
+        {
+            foreach (var candidate in categorySamples)
+            {
+                if (candidate.Meta.Id == preferredSoundId)
+                {
+                    sample = candidate;
+                    break;
+                }
+            }
+        }
+        sample ??= _sampleSelector.SelectSample(category, _loadedSamples);
         if (sample is null)
             return;
 
-        var provider = new CachedSoundSampleProvider(sample);
+        var provider = new CachedSoundSampleProvider(sample.Value.Audio);
         var tracked = new VoiceCountingSampleProvider(provider, this);
 
         lock (_voiceCountLock) _activeVoiceCount++;
         _mixer.AddMixerInput(tracked);
-        Log.Debug($"Played {category} sample ({_activeVoiceCount} active voices).");
+        Log.Debug($"Played {category} sample '{sample.Value.Meta.Id}' ({_activeVoiceCount} active voices).");
     }
 
     internal void OnVoiceFinished()

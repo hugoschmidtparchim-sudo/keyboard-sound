@@ -107,6 +107,36 @@ public sealed class ApplicationState : IDisposable
 
     public bool IsFavorite(string packId) => Settings.Current.FavoriteSoundPackIds.Contains(packId);
 
+    /// <summary>Favorites/unfavorites one individual sound by its stable id (never by name,
+    /// file path, or list position - see <see cref="Settings.AppSettings.FavoriteSoundIds"/>).</summary>
+    public void ToggleFavoriteSound(string soundId)
+    {
+        var favorites = Settings.Current.FavoriteSoundIds;
+        if (!favorites.Remove(soundId))
+            favorites.Add(soundId);
+        Settings.Save();
+    }
+
+    public bool IsFavoriteSound(string soundId) => Settings.Current.FavoriteSoundIds.Contains(soundId);
+
+    /// <summary>Pins one specific sound as the deterministic choice for its category (instead of
+    /// the pool's normal random rotation), and remembers it across restarts. Passing null clears
+    /// the pin, returning that category to normal rotation.</summary>
+    public void SelectSound(string? soundId)
+    {
+        Settings.Current.SelectedSoundId = soundId;
+        Settings.Save();
+    }
+
+    public bool IsSoundSelected(string soundId) => Settings.Current.SelectedSoundId == soundId;
+
+    /// <summary>All sounds of the currently active pack, grouped by category - the data the
+    /// individual-sound-selection UI binds to. Empty if no pack is active.</summary>
+    public IReadOnlyList<Sound> GetActivePackSounds(SoundCategory category) =>
+        ActivePack is not null && ActivePack.SoundsByCategory.TryGetValue(category, out var sounds)
+            ? sounds
+            : Array.Empty<Sound>();
+
     public void SetKeyMode(KeyMode mode)
     {
         Settings.Current.KeyMode = mode;

@@ -12,6 +12,7 @@
 
             <ui:FavoriteGlyphConverter x:Key="FavoriteGlyphConverter"/>
             <ui:ActiveLabelConverter x:Key="ActiveLabelConverter"/>
+            <ui:SelectedLabelConverter x:Key="SelectedLabelConverter"/>
             <ui:InverseBoolConverter x:Key="InverseBoolConverter"/>
         </ResourceDictionary>
     </Application.Resources>
