@@ -4,6 +4,8 @@
 [![Build](https://github.com/hugoschmidtparchim-sudo/keyboard-sound/actions/workflows/build.yml/badge.svg)](https://github.com/hugoschmidtparchim-sudo/keyboard-sound/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+![windows](https://img.shields.io/badge/-windows-lightgrey) ![wpf](https://img.shields.io/badge/-wpf-lightgrey) ![dotnet](https://img.shields.io/badge/-dotnet-lightgrey) ![csharp](https://img.shields.io/badge/-csharp-lightgrey) ![keyboard](https://img.shields.io/badge/-keyboard-lightgrey) ![audio](https://img.shields.io/badge/-audio-lightgrey) ![mechanical-keyboard](https://img.shields.io/badge/-mechanical--keyboard-lightgrey) ![desktop-app](https://img.shields.io/badge/-desktop--app-lightgrey) ![system-tray](https://img.shields.io/badge/-system--tray-lightgrey) ![naudio](https://img.shields.io/badge/-naudio-lightgrey)
+
 A lightweight Windows background app that plays keyboard-click sounds on real key presses,
 system-wide, controlled through a small draggable desktop widget. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the technology decision and module map.
