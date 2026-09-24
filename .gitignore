@@ -1,9 +1,13 @@
 .vs/
+.idea/
 bin/
 obj/
 publish/
+TestResults/
 *.user
 *.suo
+*.userosscache
+*.sln.docstates
 
 # Local dev artifacts that don't belong in source control
 *.log
