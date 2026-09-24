@@ -1,7 +1,8 @@
 # Contributing
 
 Thanks for looking at Keyboard Sound. This is a small, focused Windows utility app - the goal
-of any change should be to keep it that way.
+of any change should be to keep it that way. By participating, you're expected to follow the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
 
