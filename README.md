@@ -1,6 +1,7 @@
 # Keyboard Sound
 
 [![GitHub repo](https://img.shields.io/badge/GitHub-keyboard--sound-blue?logo=github)](https://github.com/hugoschmidtparchim-sudo/keyboard-sound)
+[![Build](https://github.com/hugoschmidtparchim-sudo/keyboard-sound/actions/workflows/build.yml/badge.svg)](https://github.com/hugoschmidtparchim-sudo/keyboard-sound/actions/workflows/build.yml)
 
 A lightweight Windows background app that plays keyboard-click sounds on real key presses,
 system-wide, controlled through a small draggable desktop widget. See
