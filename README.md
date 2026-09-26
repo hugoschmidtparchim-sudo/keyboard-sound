@@ -12,6 +12,10 @@ system-wide, controlled through a small draggable desktop widget. See
 
 ![Main window screenshot](docs/screenshot-mainwindow.png)
 
+**Demo** - favoriting a sound, pinning it as the deterministic choice for normal keys, filtering by favorites, and adjusting volume:
+
+![Demo](docs/demo.gif)
+
 ## Requirements
 
 - Windows 10/11
