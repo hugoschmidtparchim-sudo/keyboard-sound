@@ -22,4 +22,16 @@ public sealed class Sound
     public required string FilePath { get; init; }
 
     public required string PackId { get; init; }
+
+    /// <summary>
+    /// Optional fixed mapping to other sounds in the same pack, keyed by category: when this
+    /// sound is the pinned/selected identity (<see cref="Settings.AppSettings.SelectedSoundId"/>),
+    /// a key whose category appears here plays that specific linked sound instead of the
+    /// category's normal random pool - e.g. selecting "Ultra Crisp" makes Escape always play
+    /// the Escape sound that belongs to the Ultra Crisp style, never a random Escape sample from
+    /// elsewhere in the pack. A category with no entry here (or when this is null) falls back to
+    /// reusing this sound itself for that category - still fully deterministic, just without a
+    /// dedicated per-category variant. See <see cref="Audio.IAudioEngine.Play"/>.
+    /// </summary>
+    public IReadOnlyDictionary<SoundCategory, string>? LinkedSoundIds { get; init; }
 }

@@ -11,6 +11,11 @@ public sealed class SoundMetadata
     public string DisplayName { get; set; } = "";
     public string Category { get; set; } = "";
     public string File { get; set; } = "";
+
+    /// <summary>Optional: category name (e.g. "Escape", "Enter") -> id of another sound in this
+    /// pack to always use for that category when this sound is selected. See
+    /// <see cref="Sound.LinkedSoundIds"/> for the resolved, runtime form of this.</summary>
+    public Dictionary<string, string>? LinkedSounds { get; set; }
 }
 
 /// <summary>

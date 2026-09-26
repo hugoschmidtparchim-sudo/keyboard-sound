@@ -29,6 +29,12 @@ public sealed class NAudioEngine : IAudioEngine
     private IReadOnlyDictionary<SoundCategory, IReadOnlyList<LoadedSample>> _loadedSamples =
         new Dictionary<SoundCategory, IReadOnlyList<LoadedSample>>();
 
+    /// <summary>Flat id -> sample lookup across every category, used to resolve a pinned sound
+    /// (and its <see cref="Sound.LinkedSoundIds"/> targets) regardless of which category it or
+    /// its linked sounds belong to.</summary>
+    private IReadOnlyDictionary<string, LoadedSample> _loadedById =
+        new Dictionary<string, LoadedSample>();
+
     private int _activeVoiceCount;
     private readonly object _voiceCountLock = new();
     private bool _disposed;
@@ -74,9 +80,15 @@ public sealed class NAudioEngine : IAudioEngine
                 newSamples[category] = loaded;
         }
 
-        // Swap the reference atomically; any in-flight Play() calls on the old dictionary
+        var newById = new Dictionary<string, LoadedSample>();
+        foreach (var list in newSamples.Values)
+            foreach (var loaded in list)
+                newById[loaded.Meta.Id] = loaded;
+
+        // Swap the references atomically; any in-flight Play() calls on the old dictionaries
         // simply finish against the old (still-valid, GC-retained) CachedSound objects.
         _loadedSamples = newSamples;
+        _loadedById = newById;
         Log.Info($"Loaded soundpack '{pack.Id}' ({newSamples.Sum(kv => kv.Value.Count)} samples).");
     }
 
@@ -90,18 +102,7 @@ public sealed class NAudioEngine : IAudioEngine
                 return;
         }
 
-        LoadedSample? sample = null;
-        if (preferredSoundId is not null && _loadedSamples.TryGetValue(category, out var categorySamples))
-        {
-            foreach (var candidate in categorySamples)
-            {
-                if (candidate.Meta.Id == preferredSoundId)
-                {
-                    sample = candidate;
-                    break;
-                }
-            }
-        }
+        LoadedSample? sample = ResolvePinned(category, preferredSoundId);
         sample ??= _sampleSelector.SelectSample(category, _loadedSamples);
         if (sample is null)
             return;
@@ -112,6 +113,29 @@ public sealed class NAudioEngine : IAudioEngine
         lock (_voiceCountLock) _activeVoiceCount++;
         _mixer.AddMixerInput(tracked);
         Log.Debug($"Played {category} sample '{sample.Value.Meta.Id}' ({_activeVoiceCount} active voices).");
+    }
+
+    /// <summary>
+    /// If the user has pinned a specific sound, resolves what that pin means for this category:
+    /// the pin's own sound if the category matches it directly, its explicitly linked sound for
+    /// this category if one is declared (<see cref="Sound.LinkedSoundIds"/>), or - when neither
+    /// applies - the pin itself again. That last case is deliberate: a selected sound with no
+    /// dedicated variant for e.g. Escape still deterministically reuses the selected sound rather
+    /// than falling back to that category's random pool, per the "selecting a sound fixes every
+    /// key's sound" requirement. Returns null only when nothing is pinned or the pinned id no
+    /// longer resolves to a loaded sample (removed/renamed) - callers then fall back to normal
+    /// category-pool selection.
+    /// </summary>
+    private LoadedSample? ResolvePinned(SoundCategory category, string? preferredSoundId)
+    {
+        if (preferredSoundId is null || !_loadedById.TryGetValue(preferredSoundId, out var pinned))
+            return null;
+
+        var targetId = PinnedSoundResolver.ResolveTargetId(pinned.Meta, category);
+        // If the resolved target (a linked sound) somehow isn't loaded - e.g. pack.json points
+        // at a sample that failed to decode - fall back to the pin itself rather than dropping
+        // to random rotation, keeping the "selecting a sound fixes every key" guarantee.
+        return _loadedById.TryGetValue(targetId, out var target) ? target : pinned;
     }
 
     internal void OnVoiceFinished()

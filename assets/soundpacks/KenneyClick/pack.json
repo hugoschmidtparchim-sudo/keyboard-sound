@@ -1,7 +1,271 @@
 {
-  "id": "kenney-click",
-  "name": "Kenney Click",
-  "description": "Real, professionally produced click/interface samples (CC0, public domain) from Kenney's 'Interface Sounds' pack (kenney.nl), mapped to key categories. Not raw mechanical-switch recordings, but genuine licensed audio rather than a synthetic placeholder.",
-  "author": "Kenney (kenney.nl), CC0",
-  "version": "1.0.0"
+    "id":  "kenney-click",
+    "name":  "Kenney Click",
+    "description":  "Real, professionally produced click/interface samples (CC0, public domain) from Kenney\u0027s \u0027Interface Sounds\u0027 pack (kenney.nl). Grouped into 5 selectable styles; the first 4 have a matching, fixed sample for every special key (Space/Enter/Backspace/Shift/Ctrl/Alt/Tab/Other) so selecting a style keeps that same sound on every key. Not raw mechanical-switch recordings, but genuine licensed audio rather than a synthetic placeholder.",
+    "author":  "Kenney (kenney.nl), CC0",
+    "version":  "2.0.0",
+    "sounds":  [
+                   {
+                       "id":  "kenney_style1_normal",
+                       "displayName":  "Kenney Click 1",
+                       "category":  "Normal",
+                       "file":  "normal/click_001.ogg",
+                       "linkedSounds":  {
+                                            "Space":  "kenney_style1_space",
+                                            "Enter":  "kenney_style1_enter",
+                                            "Backspace":  "kenney_style1_backspace",
+                                            "Shift":  "kenney_style1_shift",
+                                            "Ctrl":  "kenney_style1_ctrl",
+                                            "Alt":  "kenney_style1_alt",
+                                            "Tab":  "kenney_style1_tab",
+                                            "Other":  "kenney_style1_other"
+                                        }
+                   },
+                   {
+                       "id":  "kenney_style1_space",
+                       "displayName":  "Kenney Click 1 (Space)",
+                       "category":  "Space",
+                       "file":  "space/drop_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_enter",
+                       "displayName":  "Kenney Click 1 (Enter)",
+                       "category":  "Enter",
+                       "file":  "enter/confirmation_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_backspace",
+                       "displayName":  "Kenney Click 1 (Backspace)",
+                       "category":  "Backspace",
+                       "file":  "backspace/back_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_shift",
+                       "displayName":  "Kenney Click 1 (Shift)",
+                       "category":  "Shift",
+                       "file":  "shift/toggle_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_ctrl",
+                       "displayName":  "Kenney Click 1 (Ctrl)",
+                       "category":  "Ctrl",
+                       "file":  "ctrl/switch_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_alt",
+                       "displayName":  "Kenney Click 1 (Alt)",
+                       "category":  "Alt",
+                       "file":  "alt/select_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_tab",
+                       "displayName":  "Kenney Click 1 (Tab)",
+                       "category":  "Tab",
+                       "file":  "tab/scroll_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style1_other",
+                       "displayName":  "Kenney Click 1 (Other)",
+                       "category":  "Other",
+                       "file":  "other/glitch_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_normal",
+                       "displayName":  "Kenney Click 2",
+                       "category":  "Normal",
+                       "file":  "normal/click_002.ogg",
+                       "linkedSounds":  {
+                                            "Space":  "kenney_style2_space",
+                                            "Enter":  "kenney_style2_enter",
+                                            "Backspace":  "kenney_style2_backspace",
+                                            "Shift":  "kenney_style2_shift",
+                                            "Ctrl":  "kenney_style2_ctrl",
+                                            "Alt":  "kenney_style2_alt",
+                                            "Tab":  "kenney_style2_tab",
+                                            "Other":  "kenney_style2_other"
+                                        }
+                   },
+                   {
+                       "id":  "kenney_style2_space",
+                       "displayName":  "Kenney Click 2 (Space)",
+                       "category":  "Space",
+                       "file":  "space/drop_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_enter",
+                       "displayName":  "Kenney Click 2 (Enter)",
+                       "category":  "Enter",
+                       "file":  "enter/confirmation_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_backspace",
+                       "displayName":  "Kenney Click 2 (Backspace)",
+                       "category":  "Backspace",
+                       "file":  "backspace/back_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_shift",
+                       "displayName":  "Kenney Click 2 (Shift)",
+                       "category":  "Shift",
+                       "file":  "shift/toggle_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_ctrl",
+                       "displayName":  "Kenney Click 2 (Ctrl)",
+                       "category":  "Ctrl",
+                       "file":  "ctrl/switch_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_alt",
+                       "displayName":  "Kenney Click 2 (Alt)",
+                       "category":  "Alt",
+                       "file":  "alt/select_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_tab",
+                       "displayName":  "Kenney Click 2 (Tab)",
+                       "category":  "Tab",
+                       "file":  "tab/scroll_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style2_other",
+                       "displayName":  "Kenney Click 2 (Other)",
+                       "category":  "Other",
+                       "file":  "other/tick_001.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_normal",
+                       "displayName":  "Kenney Click 3",
+                       "category":  "Normal",
+                       "file":  "normal/click_003.ogg",
+                       "linkedSounds":  {
+                                            "Space":  "kenney_style3_space",
+                                            "Enter":  "kenney_style3_enter",
+                                            "Backspace":  "kenney_style3_backspace",
+                                            "Shift":  "kenney_style3_shift",
+                                            "Ctrl":  "kenney_style3_ctrl",
+                                            "Alt":  "kenney_style3_alt",
+                                            "Tab":  "kenney_style3_tab",
+                                            "Other":  "kenney_style3_other"
+                                        }
+                   },
+                   {
+                       "id":  "kenney_style3_space",
+                       "displayName":  "Kenney Click 3 (Space)",
+                       "category":  "Space",
+                       "file":  "space/drop_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_enter",
+                       "displayName":  "Kenney Click 3 (Enter)",
+                       "category":  "Enter",
+                       "file":  "enter/confirmation_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_backspace",
+                       "displayName":  "Kenney Click 3 (Backspace)",
+                       "category":  "Backspace",
+                       "file":  "backspace/back_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_shift",
+                       "displayName":  "Kenney Click 3 (Shift)",
+                       "category":  "Shift",
+                       "file":  "shift/toggle_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_ctrl",
+                       "displayName":  "Kenney Click 3 (Ctrl)",
+                       "category":  "Ctrl",
+                       "file":  "ctrl/switch_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_alt",
+                       "displayName":  "Kenney Click 3 (Alt)",
+                       "category":  "Alt",
+                       "file":  "alt/select_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_tab",
+                       "displayName":  "Kenney Click 3 (Tab)",
+                       "category":  "Tab",
+                       "file":  "tab/scroll_003.ogg"
+                   },
+                   {
+                       "id":  "kenney_style3_other",
+                       "displayName":  "Kenney Click 3 (Other)",
+                       "category":  "Other",
+                       "file":  "other/tick_002.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_normal",
+                       "displayName":  "Kenney Click 4",
+                       "category":  "Normal",
+                       "file":  "normal/click_004.ogg",
+                       "linkedSounds":  {
+                                            "Space":  "kenney_style4_space",
+                                            "Enter":  "kenney_style4_enter",
+                                            "Backspace":  "kenney_style4_backspace",
+                                            "Shift":  "kenney_style4_shift",
+                                            "Ctrl":  "kenney_style4_ctrl",
+                                            "Alt":  "kenney_style4_alt",
+                                            "Tab":  "kenney_style4_tab",
+                                            "Other":  "kenney_style4_other"
+                                        }
+                   },
+                   {
+                       "id":  "kenney_style4_space",
+                       "displayName":  "Kenney Click 4 (Space)",
+                       "category":  "Space",
+                       "file":  "space/drop_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_enter",
+                       "displayName":  "Kenney Click 4 (Enter)",
+                       "category":  "Enter",
+                       "file":  "enter/confirmation_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_backspace",
+                       "displayName":  "Kenney Click 4 (Backspace)",
+                       "category":  "Backspace",
+                       "file":  "backspace/back_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_shift",
+                       "displayName":  "Kenney Click 4 (Shift)",
+                       "category":  "Shift",
+                       "file":  "shift/toggle_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_ctrl",
+                       "displayName":  "Kenney Click 4 (Ctrl)",
+                       "category":  "Ctrl",
+                       "file":  "ctrl/switch_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_alt",
+                       "displayName":  "Kenney Click 4 (Alt)",
+                       "category":  "Alt",
+                       "file":  "alt/select_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_tab",
+                       "displayName":  "Kenney Click 4 (Tab)",
+                       "category":  "Tab",
+                       "file":  "tab/scroll_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style4_other",
+                       "displayName":  "Kenney Click 4 (Other)",
+                       "category":  "Other",
+                       "file":  "other/tick_004.ogg"
+                   },
+                   {
+                       "id":  "kenney_style5_normal",
+                       "displayName":  "Kenney Click 5",
+                       "category":  "Normal",
+                       "file":  "normal/click_005.ogg"
+                   }
+               ]
 }

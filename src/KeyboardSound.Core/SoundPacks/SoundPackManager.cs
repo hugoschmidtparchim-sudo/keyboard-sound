@@ -154,7 +154,8 @@ public sealed class SoundPackManager
                         DisplayName = name,
                         Category = category,
                         FilePath = filePath,
-                        PackId = metadata.Id
+                        PackId = metadata.Id,
+                        LinkedSoundIds = ParseLinkedSounds(curated.LinkedSounds, metadata.Id, id)
                     });
                 }
                 else
@@ -175,6 +176,26 @@ public sealed class SoundPackManager
             Log.Warn($"Soundpack '{metadata.Id}': pack.json references sound file '{unmatched}' which was not found on disk. Ignoring that entry.");
 
         return result;
+    }
+
+    private static IReadOnlyDictionary<SoundCategory, string>? ParseLinkedSounds(
+        Dictionary<string, string>? raw, string packId, string ownerSoundId)
+    {
+        if (raw is null || raw.Count == 0) return null;
+
+        var result = new Dictionary<SoundCategory, string>();
+        foreach (var (categoryName, targetId) in raw)
+        {
+            if (!Enum.TryParse<SoundCategory>(categoryName, ignoreCase: true, out var category))
+            {
+                Log.Warn($"Soundpack '{packId}': sound '{ownerSoundId}' has a linkedSounds entry for unknown category '{categoryName}'. Ignoring.");
+                continue;
+            }
+            if (string.IsNullOrWhiteSpace(targetId))
+                continue;
+            result[category] = targetId;
+        }
+        return result.Count > 0 ? result : null;
     }
 
     private static string NormalizeRelativePath(string path) =>

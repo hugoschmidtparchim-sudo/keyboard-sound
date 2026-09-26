@@ -139,6 +139,68 @@ public class SoundPackManagerTests : IDisposable
     }
 
     [Fact]
+    public void Discover_WithLinkedSounds_ParsesLinkedSoundIds()
+    {
+        var packDir = CreatePack("styled", writeMetadata: false);
+        WriteSample(packDir, "normal", "click.wav");
+        WriteSample(packDir, "space", "space.wav");
+        File.WriteAllText(Path.Combine(packDir, "pack.json"), """
+            {
+              "id": "styled",
+              "name": "Styled",
+              "sounds": [
+                {
+                  "id": "style_a_normal",
+                  "displayName": "Style A",
+                  "category": "Normal",
+                  "file": "normal/click.wav",
+                  "linkedSounds": { "Space": "style_a_space" }
+                },
+                {
+                  "id": "style_a_space",
+                  "displayName": "Style A (Space)",
+                  "category": "Space",
+                  "file": "space/space.wav"
+                }
+              ]
+            }
+            """);
+
+        var pack = Assert.Single(new SoundPackManager().Discover(_root));
+        var normalSound = pack.Sounds.Single(s => s.Id == "style_a_normal");
+
+        Assert.NotNull(normalSound.LinkedSoundIds);
+        Assert.Equal("style_a_space", normalSound.LinkedSoundIds![SoundCategory.Space]);
+    }
+
+    [Fact]
+    public void Discover_LinkedSoundsWithUnknownCategory_IsIgnoredWithoutThrowing()
+    {
+        var packDir = CreatePack("styled", writeMetadata: false);
+        WriteSample(packDir, "normal", "click.wav");
+        File.WriteAllText(Path.Combine(packDir, "pack.json"), """
+            {
+              "id": "styled",
+              "name": "Styled",
+              "sounds": [
+                {
+                  "id": "style_a_normal",
+                  "displayName": "Style A",
+                  "category": "Normal",
+                  "file": "normal/click.wav",
+                  "linkedSounds": { "NotARealCategory": "whatever" }
+                }
+              ]
+            }
+            """);
+
+        var pack = Assert.Single(new SoundPackManager().Discover(_root));
+        var normalSound = Assert.Single(pack.Sounds);
+
+        Assert.Null(normalSound.LinkedSoundIds);
+    }
+
+    [Fact]
     public void Discover_CuratedMetadataReferencingMissingFile_IsIgnoredWithoutThrowing()
     {
         var packDir = CreatePack("curated", writeMetadata: false);
