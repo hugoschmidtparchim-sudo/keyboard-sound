@@ -1,4 +1,5 @@
 using System.IO;
+using System.Threading;
 using System.Windows;
 using KeyboardSound.App.Tray;
 using KeyboardSound.App.Ui;
@@ -19,6 +20,9 @@ namespace KeyboardSound.App;
 /// </summary>
 public partial class App : System.Windows.Application
 {
+    private const string SingleInstanceMutexName = "Local\\KeyboardSound-SingleInstance";
+
+    private Mutex? _singleInstanceMutex;
     private ApplicationState? _appState;
     private WidgetWindow? _widgetWindow;
     private MainWindow? _mainWindow;
@@ -27,6 +31,18 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        // A second launch (e.g. double-clicking the desktop shortcut while the tray icon is
+        // already running) would otherwise install its own global hook and play every sound
+        // twice, including after the user thinks they've "closed" the app because the first,
+        // still-running instance keeps going in the background. Only the first instance
+        // proceeds; a later one exits immediately without touching audio/input/tray.
+        _singleInstanceMutex = new Mutex(true, SingleInstanceMutexName, out var createdNew);
+        if (!createdNew)
+        {
+            Shutdown();
+            return;
+        }
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -78,7 +94,8 @@ public partial class App : System.Windows.Application
         _mainWindow.Activate();
     }
 
-    /// <summary>Actual application exit — only reached via the tray "Exit" item.</summary>
+    /// <summary>Actual application exit — reached via the tray "Exit" item, or immediately at
+    /// startup for a second instance that lost the single-instance mutex (see OnStartup).</summary>
     private new void Shutdown()
     {
         if (_mainWindow is not null) _mainWindow.IsExiting = true;
@@ -87,6 +104,7 @@ public partial class App : System.Windows.Application
         _widgetWindow?.Close();
         _mainWindow?.Close();
         _appState?.Shutdown();
+        _singleInstanceMutex?.Dispose();
 
         base.Shutdown();
     }
