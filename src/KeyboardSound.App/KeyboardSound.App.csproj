@@ -35,11 +35,14 @@
   <ItemGroup>
     <!-- Same .ico embedded here as a WPF resource (for the runtime window/tray icon) is also
          referenced by ApplicationIcon above (for the EXE's Win32 icon resource), so there is
-         exactly one icon asset and both the file and the running app show the same artwork. -->
+         exactly one icon asset and both the file and the running app show the same artwork.
+         Every size in it is a plain high-quality resize of the complete source image - no
+         cropping, no simplified redraw - per an explicit instruction to keep the full image
+         intact rather than deriving a simplified mark from it. -->
     <Resource Include="Resources\app.ico" />
-    <!-- Transparent-background rendition of the same mark, sized for the small desktop widget,
-         which draws its own rounded surface/border rather than reusing the icon's dark square. -->
-    <Resource Include="Resources\widget-mark.png" />
+    <!-- The same complete image at a resolution high enough to scale down cleanly for the
+         small desktop widget's Image control. -->
+    <Resource Include="Resources\widget-logo.png" />
   </ItemGroup>
 
 </Project>

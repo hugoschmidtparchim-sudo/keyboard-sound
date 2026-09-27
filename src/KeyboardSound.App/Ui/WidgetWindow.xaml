@@ -20,8 +20,8 @@
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown"
             ToolTip="Keyboard Sound - click to open, drag to move">
         <Grid>
-            <Image Source="/Resources/widget-mark.png"
-                   Width="42" Height="42"
+            <Image Source="/Resources/widget-logo.png"
+                   Width="60" Height="60"
                    Stretch="Uniform"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
