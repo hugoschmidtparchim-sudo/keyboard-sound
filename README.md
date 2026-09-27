@@ -40,7 +40,19 @@ dotnet publish src\KeyboardSound.App -c Release -r win-x64 --self-contained true
 ```
 
 The result, `publish\win-x64\KeyboardSound.exe`, runs standalone without a .NET install on the
-target machine.
+target machine. It carries its own icon (embedded via `ApplicationIcon` in
+`KeyboardSound.App.csproj`) - Explorer, the taskbar and Alt-Tab all show it.
+
+### Desktop / Start Menu shortcuts
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tools\create-shortcuts.ps1
+```
+
+Creates a `KeyboardSound.lnk` on the Desktop and in the current user's Start Menu, both pointing
+at `publish\win-x64\KeyboardSound.exe` with its embedded icon. Plain shortcut files - no
+installer, no registry changes, no admin rights. Pass `-ExePath` if you published somewhere else,
+or `-Desktop $false` / `-StartMenu $false` to skip one of the two.
 
 ## Soundpacks
 

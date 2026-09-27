@@ -14,6 +14,9 @@
     <AssemblyName>KeyboardSound</AssemblyName>
     <RootNamespace>KeyboardSound.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Resources\app.ico</ApplicationIcon>
+    <Product>KeyboardSound</Product>
+    <AssemblyTitle>KeyboardSound</AssemblyTitle>
     <Platforms>x64</Platforms>
     <SelfContained>false</SelfContained>
     <!-- WFAC010: WinForms' high-DPI analyzer flags the manifest's dpiAware setting, but DPI
@@ -27,6 +30,13 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>soundpacks\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Same .ico embedded here as a WPF resource (for the runtime window/tray icon) is also
+         referenced by ApplicationIcon above (for the EXE's Win32 icon resource), so there is
+         exactly one icon asset and both the file and the running app show the same artwork. -->
+    <Resource Include="Resources\app.ico" />
   </ItemGroup>
 
 </Project>
