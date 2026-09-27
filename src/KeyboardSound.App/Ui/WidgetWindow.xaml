@@ -20,11 +20,12 @@
             MouseLeftButtonDown="RootBorder_MouseLeftButtonDown"
             ToolTip="Keyboard Sound - click to open, drag to move">
         <Grid>
-            <TextBlock Text="&#x2328;"
-                       FontSize="26"
-                       Foreground="{StaticResource TextPrimaryBrush}"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center"/>
+            <Image Source="/Resources/widget-mark.png"
+                   Width="42" Height="42"
+                   Stretch="Uniform"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality"/>
             <Ellipse x:Name="StatusDot"
                      Width="10" Height="10"
                      Fill="{StaticResource AccentBrush}"

@@ -37,6 +37,9 @@
          referenced by ApplicationIcon above (for the EXE's Win32 icon resource), so there is
          exactly one icon asset and both the file and the running app show the same artwork. -->
     <Resource Include="Resources\app.ico" />
+    <!-- Transparent-background rendition of the same mark, sized for the small desktop widget,
+         which draws its own rounded surface/border rather than reusing the icon's dark square. -->
+    <Resource Include="Resources\widget-mark.png" />
   </ItemGroup>
 
 </Project>
