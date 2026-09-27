@@ -52,17 +52,12 @@ src/
 
   KeyboardSound.Tests/         xUnit tests for every non-UI module in Core.
 
-assets/soundpacks/CuratedClick/ Default pack: 7 hand-picked real samples, each with curated
-                                 metadata (stable id + display name) in pack.json - see
-                                 "Individual sounds" below.
-assets/soundpacks/KenneyClick/  Real CC0 samples from Kenney's "Interface Sounds" pack
-                                 (kenney.nl), mapped to key categories (not raw mechanical-
-                                 switch recordings, but genuine licensed audio, not synthetic).
-assets/soundpacks/Placeholder/  Synthetic fallback pack, no external assets (see
-                                 tools/generate-placeholder-sounds.ps1). No pack is referenced
-                                 by name in code - SoundPackManager discovers packs purely from
-                                 folder structure, so adding/removing/replacing a pack folder
-                                 requires no code changes.
+assets/soundpacks/CuratedClick/ Default (and only shipped) pack: 7 hand-picked real samples,
+                                 each with curated metadata (stable id + display name) in
+                                 pack.json - see "Individual sounds" below. No pack is
+                                 referenced by name in code - SoundPackManager discovers packs
+                                 purely from folder structure, so adding/removing/replacing a
+                                 pack folder requires no code changes.
 ```
 
 Data flow for a keypress:
@@ -169,7 +164,7 @@ future non-Win32 input source, or a different audio backend).
   virtual-keyboard picker described in the product spec is future UI work on an already-ready
   data model.
 - Soundpack switching decodes the newly-activated pack synchronously on the UI thread. With the
-  small placeholder pack this is instant; a very large future soundpack could cause a brief UI
+  current small packs this is instant; a very large future soundpack could cause a brief UI
   pause worth moving to a background task later.
 - No installer/MSIX packaging yet - only a raw publish output. Not needed for this foundation
   loop; worth adding before any real distribution.

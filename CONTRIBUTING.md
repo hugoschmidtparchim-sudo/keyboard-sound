@@ -46,8 +46,8 @@ Drop a folder under `assets\soundpacks\` with a `pack.json` and category subfold
 Optionally give samples stable, curated ids/display names via pack.json's `"sounds"` array - see
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#individual-sounds-and-stable-ids). Nothing in the
 code references a pack or sample by name, so this needs no code changes. Only include audio you
-have the rights to redistribute, and note the license in the pack's own metadata (see
-`assets\soundpacks\KenneyClick\License.txt` for the pattern).
+have the rights to redistribute, and note the license in the pack's own metadata if it isn't
+your own original work.
 
 ## Code style
 

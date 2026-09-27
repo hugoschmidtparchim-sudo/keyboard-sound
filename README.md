@@ -56,18 +56,11 @@ or `-Desktop $false` / `-StartMenu $false` to skip one of the two.
 
 ## Soundpacks
 
-`assets\soundpacks\CuratedClick\` is the default pack: 7 hand-picked real click samples
-(Crisp ASMR, Deep Thock, Soft Creamy, Snappy Thock, Whisper Soft, Warm Creamy, Ultra Crisp),
-each individually favoritable and selectable in the main window's SOUNDS section - see
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#individual-sounds-and-stable-ids) for how stable
-sound ids work. `assets\soundpacks\KenneyClick\` is a second real pack (CC0-licensed
-click/interface samples from Kenney's "Interface Sounds" pack, kenney.nl). `assets\soundpacks\Placeholder\`
-is a synthetic fallback pack (no external assets, no licensing to track) kept around for quick
-local testing; regenerate it with:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File tools\generate-placeholder-sounds.ps1
-```
+`assets\soundpacks\CuratedClick\` is the default (and only shipped) pack: 7 hand-picked real
+click samples (Crisp ASMR, Deep Thock, Soft Creamy, Snappy Thock, Whisper Soft, Warm Creamy,
+Ultra Crisp), each individually favoritable and selectable in the main window's SOUNDS section -
+see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#individual-sounds-and-stable-ids) for how stable
+sound ids work.
 
 Add a real recorded soundpack later by dropping a new folder with the same `pack.json` +
 category-folder structure into `assets\soundpacks\` (or the user soundpacks directory under
@@ -79,10 +72,3 @@ from the file name.
 **Note:** soundpack files are copied into the build output at build time - after editing
 anything under `assets\soundpacks\`, run `dotnet build` before relaunching, or the app will
 run against a stale copy.
-
-### Third-party assets
-
-`assets\soundpacks\KenneyClick\` contains audio samples from Kenney's "Interface Sounds" pack
-(https://kenney.nl/assets/interface-sounds), licensed CC0 (public domain) - free for personal,
-educational and commercial use, attribution appreciated but not required. The original
-`License.txt` is kept alongside the samples for provenance.
