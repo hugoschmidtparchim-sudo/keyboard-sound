@@ -12,8 +12,8 @@ namespace KeyboardSound.App.Ui;
 /// <summary>
 /// Main window: current pack, volume, key mode, soundpack list with favorites, and basic
 /// settings. Plain code-behind (no MVVM framework) — the app is small enough that the extra
-/// abstraction wouldn't earn its keep. Closing the window hides it instead of exiting the app;
-/// the app only actually exits via the tray "Exit" command.
+/// abstraction wouldn't earn its keep. Closing the window minimizes it instead of exiting the
+/// app; the app only actually exits via the tray "Exit" command.
 /// </summary>
 public partial class MainWindow : Window
 {
@@ -275,6 +275,9 @@ public partial class MainWindow : Window
     {
         if (IsExiting) return;
         e.Cancel = true;
-        Hide();
+        // Minimize rather than Hide() so the window keeps its taskbar button (clicking it
+        // restores the window) instead of disappearing from the taskbar entirely - only the
+        // tray "Exit" command should ever make KeyboardSound's taskbar presence go away.
+        WindowState = WindowState.Minimized;
     }
 }

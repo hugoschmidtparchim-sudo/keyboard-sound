@@ -29,7 +29,7 @@
 
     <CornerRadius x:Key="CardCornerRadius">14</CornerRadius>
     <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
-    <CornerRadius x:Key="WidgetCornerRadius">20</CornerRadius>
+    <CornerRadius x:Key="WidgetCornerRadius">26</CornerRadius>
 
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>
 

@@ -1,4 +1,5 @@
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
 using KeyboardSound.App.Tray;
@@ -22,6 +23,14 @@ public partial class App : System.Windows.Application
 {
     private const string SingleInstanceMutexName = "Local\\KeyboardSound-SingleInstance";
 
+    // Gives the running process its own explicit taskbar/jump-list identity instead of
+    // inheriting a generic one derived from the exe path, so Windows always groups the window
+    // under - and recognizes a pinned shortcut as - this one app.
+    private const string AppUserModelId = "KeyboardSound.App";
+
+    [DllImport("shell32.dll", SetLastError = true)]
+    private static extern void SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string appId);
+
     private Mutex? _singleInstanceMutex;
     private ApplicationState? _appState;
     private WidgetWindow? _widgetWindow;
@@ -31,6 +40,8 @@ public partial class App : System.Windows.Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
 
         // A second launch (e.g. double-clicking the desktop shortcut while the tray icon is
         // already running) would otherwise install its own global hook and play every sound
@@ -68,6 +79,14 @@ public partial class App : System.Windows.Application
 
         _mainWindow = new MainWindow(_appState);
         _mainWindow.WidgetVisibilityRequested += visible => SetWidgetVisible(visible);
+
+        // Shown minimized (set before Show(), so it never actually flashes on screen) rather
+        // than not shown at all, so KeyboardSound has its own taskbar button - clickable to
+        // restore the settings window - for as long as the app is running, independent of the
+        // tray icon and the desktop widget (see the loop spec: the three surfaces are meant to
+        // work independently of each other).
+        _mainWindow.WindowState = WindowState.Minimized;
+        _mainWindow.Show();
 
         _widgetWindow = new WidgetWindow(_appState);
         _widgetWindow.OpenRequested += ShowMainWindow;
