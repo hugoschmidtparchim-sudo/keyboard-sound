@@ -17,12 +17,20 @@
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <Product>KeyboardSound</Product>
     <AssemblyTitle>KeyboardSound</AssemblyTitle>
+    <Version>1.0.0</Version>
     <Platforms>x64</Platforms>
     <SelfContained>false</SelfContained>
     <!-- WFAC010: WinForms' high-DPI analyzer flags the manifest's dpiAware setting, but DPI
          here is driven by WPF (which reads the manifest directly); WinForms is only used for
          the tray icon, which has no DPI-sensitive UI of its own. -->
     <NoWarn>WFAC010</NoWarn>
+  </PropertyGroup>
+
+  <!-- Release publishes should never carry .pdb files - they embed the developer's local source
+       paths, which have no reason to ship in a distributed build (Steam or otherwise). Debug
+       keeps full symbols since they're needed for local debugging. -->
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,9 +1,12 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using KeyboardSound.App.Configuration;
 using KeyboardSound.Core.AppState;
 using KeyboardSound.Core.Input;
+using KeyboardSound.Core.Persistence;
 using KeyboardSound.Core.Settings;
 using KeyboardSound.Core.SoundPacks;
 
@@ -38,6 +41,9 @@ public partial class MainWindow : Window
         _appState = appState;
 
         Icon = IconFactory.CreateWindowIconSource();
+
+        var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+        VersionText.Text = $"KeyboardSound v{(version is null ? "1.0.0" : version.ToString(3))}";
 
         BuildCustomKeysPanel();
         LoadFromState();
@@ -133,6 +139,12 @@ public partial class MainWindow : Window
         if (((FrameworkElement)sender).Tag is not string id) return;
         _appState.SelectSound(id);
         RefreshSoundList();
+    }
+
+    private void PreviewSoundButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (((FrameworkElement)sender).Tag is not string id) return;
+        _appState.PreviewSound(id);
     }
 
     private void SoundName_MouseLeftButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -267,6 +279,172 @@ public partial class MainWindow : Window
         _appState.Settings.Current.DebugLogging = enabled;
         _appState.Settings.Save();
         Core.Diagnostics.Log.DebugEnabled = enabled;
+    }
+
+    private void ExportSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Title = "Export KeyboardSound Settings",
+            Filter = "KeyboardSound backup (*.json)|*.json",
+            FileName = $"KeyboardSound-backup-{DateTime.Now:yyyy-MM-dd}.json"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        // Reuses the same atomic-write persistence the live settings file already uses, just
+        // pointed at the chosen path - no separate serialization logic to keep in sync.
+        new JsonFileStore<AppSettings>(dialog.FileName).Save(_appState.Settings.Current);
+        ShowBackupStatus($"Exported to {System.IO.Path.GetFileName(dialog.FileName)}.");
+    }
+
+    private void ImportSettings_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Import KeyboardSound Settings",
+            Filter = "KeyboardSound backup (*.json)|*.json"
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        AppSettings? imported;
+        try
+        {
+            var json = System.IO.File.ReadAllText(dialog.FileName);
+            imported = JsonSerializer.Deserialize<AppSettings>(json, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                Converters = { new JsonStringEnumConverter() }
+            });
+        }
+        catch (Exception ex)
+        {
+            Core.Diagnostics.Log.Error($"Failed to read settings backup '{dialog.FileName}'.", ex);
+            imported = null;
+        }
+
+        if (imported is null)
+        {
+            ShowBackupStatus("Import failed - that file isn't a valid KeyboardSound backup.");
+            return;
+        }
+
+        // Applied onto the live settings object in place (rather than replacing the reference)
+        // so every other component already holding onto Settings.Current sees the update.
+        var current = _appState.Settings.Current;
+        current.Volume = Math.Clamp(imported.Volume, 0.0, 1.0);
+        current.SoundEnabled = imported.SoundEnabled;
+        current.KeyMode = imported.KeyMode;
+        current.EnabledKeys = imported.EnabledKeys ?? new();
+        current.FavoriteSoundPackIds = imported.FavoriteSoundPackIds ?? new();
+        current.FavoriteSoundIds = imported.FavoriteSoundIds ?? new();
+        current.SelectedSoundId = imported.SelectedSoundId;
+        current.WidgetPosition = imported.WidgetPosition;
+        current.WidgetVisible = imported.WidgetVisible;
+        current.StartWithWindows = imported.StartWithWindows;
+        current.DebugLogging = imported.DebugLogging;
+        if (!string.IsNullOrWhiteSpace(imported.ActiveSoundPackId))
+            current.ActiveSoundPackId = imported.ActiveSoundPackId;
+        _appState.Settings.Save();
+
+        // Sync the handful of things that live outside the settings file itself.
+        _appState.AudioEngine.Volume = current.Volume;
+        Core.Diagnostics.Log.DebugEnabled = current.DebugLogging;
+        StartupManager.SetEnabled(current.StartWithWindows);
+        if (_appState.AvailablePacks.Any(p => p.Id == current.ActiveSoundPackId))
+            _appState.ActivatePack(current.ActiveSoundPackId);
+        WidgetVisibilityRequested?.Invoke(current.WidgetVisible);
+
+        LoadFromState();
+        ShowBackupStatus("Settings imported successfully.");
+    }
+
+    private void ShowBackupStatus(string message)
+    {
+        BackupStatusText.Text = message;
+        BackupStatusText.Visibility = Visibility.Visible;
+    }
+
+    private void AddSoundpack_Click(object sender, RoutedEventArgs e)
+    {
+        using var dialog = new System.Windows.Forms.FolderBrowserDialog
+        {
+            Description = "Select a soundpack folder (a pack.json plus category subfolders like 'normal', 'space', etc.)",
+            UseDescriptionForTitle = true
+        };
+        if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        var sourceDir = dialog.SelectedPath;
+        var folderName = System.IO.Path.GetFileName(sourceDir.TrimEnd(System.IO.Path.DirectorySeparatorChar));
+        if (string.IsNullOrWhiteSpace(folderName))
+        {
+            ShowSoundpackImportStatus("Couldn't add that folder - invalid folder name.");
+            return;
+        }
+
+        var destDir = System.IO.Path.Combine(KeyboardSound.Core.Configuration.AppPaths.UserSoundPacksDirectory, folderName);
+        if (System.IO.Directory.Exists(destDir))
+        {
+            ShowSoundpackImportStatus($"A soundpack named '{folderName}' is already installed.");
+            return;
+        }
+
+        try
+        {
+            CopyDirectory(sourceDir, destDir);
+        }
+        catch (Exception ex)
+        {
+            Core.Diagnostics.Log.Error($"Failed to copy soundpack from '{sourceDir}' to '{destDir}'.", ex);
+            ShowSoundpackImportStatus("Couldn't add that soundpack - see the log for details.");
+            TryDeleteDirectory(destDir);
+            return;
+        }
+
+        // Discovery (not this handler) is the single source of truth for what counts as a valid
+        // pack - reusing it here means a folder is only accepted if SoundPackManager would also
+        // accept it later, with no separate validation rules to keep in sync.
+        _appState.RefreshPacks();
+
+        if (_appState.AvailablePacks.Any(p => p.RootPath == destDir))
+        {
+            RefreshPackList();
+            ShowSoundpackImportStatus($"Added soundpack '{folderName}'.");
+        }
+        else
+        {
+            TryDeleteDirectory(destDir);
+            _appState.RefreshPacks();
+            ShowSoundpackImportStatus("That folder doesn't look like a valid soundpack - no category subfolders with .wav/.ogg files were found.");
+        }
+    }
+
+    private static void CopyDirectory(string sourceDir, string destDir)
+    {
+        System.IO.Directory.CreateDirectory(destDir);
+        foreach (var dir in System.IO.Directory.GetDirectories(sourceDir, "*", System.IO.SearchOption.AllDirectories))
+            System.IO.Directory.CreateDirectory(dir.Replace(sourceDir, destDir));
+        foreach (var file in System.IO.Directory.GetFiles(sourceDir, "*", System.IO.SearchOption.AllDirectories))
+            System.IO.File.Copy(file, file.Replace(sourceDir, destDir), overwrite: false);
+    }
+
+    private static void TryDeleteDirectory(string dir)
+    {
+        try
+        {
+            if (System.IO.Directory.Exists(dir))
+                System.IO.Directory.Delete(dir, recursive: true);
+        }
+        catch
+        {
+            // Best-effort cleanup only - a leftover partial folder is harmless since it either
+            // won't parse as a pack (ignored by discovery) or the user can delete it manually.
+        }
+    }
+
+    private void ShowSoundpackImportStatus(string message)
+    {
+        SoundpackImportStatusText.Text = message;
+        SoundpackImportStatusText.Visibility = Visibility.Visible;
     }
 
     public event Action<bool>? WidgetVisibilityRequested;

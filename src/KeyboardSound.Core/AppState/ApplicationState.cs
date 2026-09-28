@@ -130,6 +130,12 @@ public sealed class ApplicationState : IDisposable
 
     public bool IsSoundSelected(string soundId) => Settings.Current.SelectedSoundId == soundId;
 
+    /// <summary>Plays one sound immediately as an explicit "hear this now" preview, independent
+    /// of the global <see cref="Settings.AppSettings.SoundEnabled"/> toggle and not routed
+    /// through a keypress. Every sound the Sounds list can preview belongs to
+    /// <see cref="SoundCategory.Normal"/>, so that is the only category this ever needs to pass.</summary>
+    public void PreviewSound(string soundId) => AudioEngine.Play(SoundCategory.Normal, soundId);
+
     /// <summary>All sounds of the currently active pack, grouped by category - the data the
     /// individual-sound-selection UI binds to. Empty if no pack is active.</summary>
     public IReadOnlyList<Sound> GetActivePackSounds(SoundCategory category) =>

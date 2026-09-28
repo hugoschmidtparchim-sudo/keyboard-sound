@@ -101,6 +101,22 @@ public class ApplicationStateSoundSelectionTests : IDisposable
         Assert.False(state.IsFavoriteSound("some_removed_sound_id"));
     }
 
+    [Fact]
+    public void PreviewSound_PlaysExactSoundOnNormalCategory_WithoutChangingSelection()
+    {
+        var state = CreateState();
+        state.Start();
+        var engine = (FakeAudioEngine)state.AudioEngine;
+
+        state.PreviewSound("deep_thock_01");
+
+        Assert.Single(engine.PlayCalls);
+        Assert.Equal((SoundCategory.Normal, "deep_thock_01"), engine.PlayCalls[0]);
+        // A preview is a "hear it now" action, not a "select it" action - the pinned sound
+        // (if any) must be unaffected.
+        Assert.Null(state.Settings.Current.SelectedSoundId);
+    }
+
     public void Dispose()
     {
         if (File.Exists(_tempFile)) File.Delete(_tempFile);
@@ -110,8 +126,10 @@ public class ApplicationStateSoundSelectionTests : IDisposable
     private sealed class FakeAudioEngine : IAudioEngine
     {
         public double Volume { get; set; }
+        public List<(SoundCategory Category, string? PreferredSoundId)> PlayCalls { get; } = new();
         public void LoadPack(SoundPackInfo pack) { }
-        public void Play(SoundCategory category, string? preferredSoundId = null) { }
+        public void Play(SoundCategory category, string? preferredSoundId = null) =>
+            PlayCalls.Add((category, preferredSoundId));
         public void Dispose() { }
     }
 
