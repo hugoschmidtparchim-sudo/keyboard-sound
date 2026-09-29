@@ -4,6 +4,7 @@ using KeyboardSound.Core.Input;
 using KeyboardSound.Core.Routing;
 using KeyboardSound.Core.Settings;
 using KeyboardSound.Core.SoundPacks;
+using KeyboardSound.Core.Stats;
 
 namespace KeyboardSound.Core.AppState;
 
@@ -22,6 +23,7 @@ public sealed class ApplicationState : IDisposable
     public SoundPackManager PackManager { get; }
     public IAudioEngine AudioEngine { get; }
     public IGlobalKeyboardHook Hook { get; }
+    public UsageStatsTracker Stats { get; }
 
     public IReadOnlyList<SoundPackInfo> AvailablePacks { get; private set; } = Array.Empty<SoundPackInfo>();
     public SoundPackInfo? ActivePack { get; private set; }
@@ -32,13 +34,15 @@ public sealed class ApplicationState : IDisposable
         SettingsService settings,
         IAudioEngine audioEngine,
         IGlobalKeyboardHook hook,
-        IReadOnlyList<string> soundPackRoots)
+        IReadOnlyList<string> soundPackRoots,
+        UsageStatsTracker stats)
     {
         Settings = settings;
         AudioEngine = audioEngine;
         Hook = hook;
         PackManager = new SoundPackManager();
         _soundPackRoots = soundPackRoots;
+        Stats = stats;
     }
 
     /// <summary>Startup sequence: discover packs, activate the last-used (or default) one,
@@ -50,9 +54,24 @@ public sealed class ApplicationState : IDisposable
         AudioEngine.Volume = Settings.Current.Volume;
 
         _router = new InputRouter(Hook, AudioEngine, Settings);
+        // A second, independent subscription purely for local usage stats - kept out of
+        // InputRouter itself so the hot input->audio path never gains a new dependency; this
+        // handler only ever does cheap in-memory increments (see UsageStatsTracker), never file
+        // I/O per keystroke.
+        Hook.KeyEvent += OnKeyEventForStats;
         Hook.Start();
 
         Log.Info("Application state started.");
+    }
+
+    private void OnKeyEventForStats(KeyEvent evt)
+    {
+        if (evt.Action != KeyAction.Down) return;
+        if (evt.Key == LogicalKey.Unknown) return;
+
+        Stats.RecordKeyPress(evt.Key);
+        if (Settings.Current.SoundEnabled)
+            Stats.RecordSoundPlayed();
     }
 
     public void RefreshPacks()
@@ -155,6 +174,37 @@ public sealed class ApplicationState : IDisposable
         Settings.Save();
     }
 
+    /// <summary>Assigns one sound to every key in <paramref name="keys"/> (the Keyboard Editor's
+    /// multi-select "apply to all selected" action) - a strictly additive override on top of
+    /// whatever <see cref="SelectedSoundId"/>/category-pool selection already exists; see
+    /// <see cref="Routing.InputRouter"/> for the priority order.</summary>
+    public void SetCustomKeySounds(IEnumerable<LogicalKey> keys, string soundId)
+    {
+        foreach (var key in keys)
+            Settings.Current.CustomKeySounds[key.ToString()] = soundId;
+        Settings.Save();
+    }
+
+    /// <summary>Reverts the given keys to "use global sound" by removing their override, if any.</summary>
+    public void ClearCustomKeySounds(IEnumerable<LogicalKey> keys)
+    {
+        foreach (var key in keys)
+            Settings.Current.CustomKeySounds.Remove(key.ToString());
+        Settings.Save();
+    }
+
+    public string? GetCustomKeySound(LogicalKey key) =>
+        Settings.Current.CustomKeySounds.TryGetValue(key.ToString(), out var soundId) ? soundId : null;
+
+    /// <summary>Clears every per-key override at once ("Reset Custom Keys"). Leaves
+    /// <see cref="Settings.AppSettings.EnabledKeys"/>, favorites, and every other setting
+    /// untouched.</summary>
+    public void ResetCustomKeySounds()
+    {
+        Settings.Current.CustomKeySounds.Clear();
+        Settings.Save();
+    }
+
     public void SetSoundEnabled(bool enabled)
     {
         Settings.Current.SoundEnabled = enabled;
@@ -166,9 +216,11 @@ public sealed class ApplicationState : IDisposable
     public void Shutdown()
     {
         Hook.Stop();
+        Hook.KeyEvent -= OnKeyEventForStats;
         _router?.Dispose();
         AudioEngine.Dispose();
         Settings.Save();
+        Stats.EndSession();
         Log.Info("Application state shut down cleanly.");
         Log.Flush();
     }

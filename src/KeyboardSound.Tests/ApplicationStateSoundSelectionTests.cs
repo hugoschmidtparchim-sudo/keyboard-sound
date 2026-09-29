@@ -3,6 +3,7 @@ using KeyboardSound.Core.Audio;
 using KeyboardSound.Core.Input;
 using KeyboardSound.Core.Settings;
 using KeyboardSound.Core.SoundPacks;
+using KeyboardSound.Core.Stats;
 
 namespace KeyboardSound.Tests;
 
@@ -15,6 +16,7 @@ public class ApplicationStateSoundSelectionTests : IDisposable
 {
     private readonly string _tempFile = Path.Combine(Path.GetTempPath(), $"ks-appstate-{Guid.NewGuid():N}.json");
     private readonly string _packsRoot = Path.Combine(Path.GetTempPath(), $"ks-appstate-packs-{Guid.NewGuid():N}");
+    private readonly string _statsFile = Path.Combine(Path.GetTempPath(), $"ks-appstate-stats-{Guid.NewGuid():N}.json");
 
     public ApplicationStateSoundSelectionTests()
     {
@@ -41,7 +43,7 @@ public class ApplicationStateSoundSelectionTests : IDisposable
 
         var settings = new SettingsService(_tempFile);
         settings.Current.ActiveSoundPackId = "curated";
-        return new ApplicationState(settings, new FakeAudioEngine(), new FakeHook(), new[] { _packsRoot });
+        return new ApplicationState(settings, new FakeAudioEngine(), new FakeHook(), new[] { _packsRoot }, new UsageStatsTracker(_statsFile));
     }
 
     [Fact]
@@ -117,9 +119,65 @@ public class ApplicationStateSoundSelectionTests : IDisposable
         Assert.Null(state.Settings.Current.SelectedSoundId);
     }
 
+    [Fact]
+    public void SetCustomKeySounds_AssignsToEveryGivenKey()
+    {
+        var state = CreateState();
+        state.Start();
+
+        state.SetCustomKeySounds(new[] { LogicalKey.W, LogicalKey.A, LogicalKey.S, LogicalKey.D }, "deep_thock_01");
+
+        Assert.Equal("deep_thock_01", state.GetCustomKeySound(LogicalKey.W));
+        Assert.Equal("deep_thock_01", state.GetCustomKeySound(LogicalKey.A));
+        Assert.Equal("deep_thock_01", state.GetCustomKeySound(LogicalKey.S));
+        Assert.Equal("deep_thock_01", state.GetCustomKeySound(LogicalKey.D));
+        Assert.Null(state.GetCustomKeySound(LogicalKey.Q));
+    }
+
+    [Fact]
+    public void ClearCustomKeySounds_RevertsOnlyTheGivenKeys()
+    {
+        var state = CreateState();
+        state.Start();
+        state.SetCustomKeySounds(new[] { LogicalKey.W, LogicalKey.A }, "deep_thock_01");
+
+        state.ClearCustomKeySounds(new[] { LogicalKey.W });
+
+        Assert.Null(state.GetCustomKeySound(LogicalKey.W));
+        Assert.Equal("deep_thock_01", state.GetCustomKeySound(LogicalKey.A));
+    }
+
+    [Fact]
+    public void ResetCustomKeySounds_ClearsEverything_ButLeavesFavoritesAlone()
+    {
+        var state = CreateState();
+        state.Start();
+        state.SetCustomKeySounds(new[] { LogicalKey.W, LogicalKey.A }, "deep_thock_01");
+        state.ToggleFavoriteSound("crisp_asmr_01");
+
+        state.ResetCustomKeySounds();
+
+        Assert.Null(state.GetCustomKeySound(LogicalKey.W));
+        Assert.Null(state.GetCustomKeySound(LogicalKey.A));
+        Assert.True(state.IsFavoriteSound("crisp_asmr_01"));
+    }
+
+    [Fact]
+    public void CustomKeySounds_PersistAcrossReload()
+    {
+        var state = CreateState();
+        state.Start();
+        state.SetCustomKeySounds(new[] { LogicalKey.W }, "deep_thock_01");
+        state.Shutdown();
+
+        var reloadedSettings = new SettingsService(_tempFile);
+        Assert.Equal("deep_thock_01", reloadedSettings.Current.CustomKeySounds["W"]);
+    }
+
     public void Dispose()
     {
         if (File.Exists(_tempFile)) File.Delete(_tempFile);
+        if (File.Exists(_statsFile)) File.Delete(_statsFile);
         if (Directory.Exists(_packsRoot)) Directory.Delete(_packsRoot, recursive: true);
     }
 

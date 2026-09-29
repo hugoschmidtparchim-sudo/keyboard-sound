@@ -10,6 +10,7 @@ using KeyboardSound.Core.Configuration;
 using KeyboardSound.Core.Diagnostics;
 using KeyboardSound.Core.Input;
 using KeyboardSound.Core.Settings;
+using KeyboardSound.Core.Stats;
 
 namespace KeyboardSound.App;
 
@@ -58,6 +59,12 @@ public partial class App : System.Windows.Application
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
+        // Captured before SettingsService touches the file: this is the only reliable way to
+        // tell "genuinely first run ever" apart from "an existing user whose settings.json
+        // predates a newer field", which a field default alone can't distinguish (see
+        // AppSettings.OnboardingCompleted).
+        var isFirstEverRun = !File.Exists(AppPaths.SettingsFilePath);
+
         var settings = new SettingsService(AppPaths.SettingsFilePath);
         Log.Initialize(AppPaths.LogFilePath, settings.Current.DebugLogging);
         Log.Info("Starting Keyboard Sound.");
@@ -66,16 +73,25 @@ public partial class App : System.Windows.Application
 
         IAudioEngine audioEngine = new NAudioEngine();
         IGlobalKeyboardHook hook = new LowLevelKeyboardHook();
+        var stats = new UsageStatsTracker(AppPaths.StatsFilePath);
 
         _appState = new ApplicationState(
             settings,
             audioEngine,
             hook,
-            new[] { AppPaths.BuiltInSoundPacksDirectory, AppPaths.UserSoundPacksDirectory });
+            new[] { AppPaths.BuiltInSoundPacksDirectory, AppPaths.UserSoundPacksDirectory },
+            stats);
 
         // The LL keyboard hook must be installed on a thread pumping Win32 messages;
         // the WPF UI thread's Dispatcher already does this once the app is running.
         _appState.Start();
+
+        if (isFirstEverRun)
+        {
+            var onboarding = new OnboardingWindow(_appState);
+            onboarding.WidgetVisibilityRequested += visible => SetWidgetVisible(visible);
+            onboarding.ShowDialog();
+        }
 
         _mainWindow = new MainWindow(_appState);
         _mainWindow.WidgetVisibilityRequested += visible => SetWidgetVisible(visible);

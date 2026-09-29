@@ -1,3 +1,5 @@
+using NAudio.CoreAudioApi;
+using NAudio.CoreAudioApi.Interfaces;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using KeyboardSound.Core.Diagnostics;
@@ -9,6 +11,13 @@ namespace KeyboardSound.Core.Audio;
 /// WASAPI-backed audio engine. A single shared output device + mixer handles all overlapping
 /// playback, so typing fast never spins up new devices/threads per keypress — samples are
 /// pre-decoded (<see cref="CachedSound"/>) and simply mixed in.
+///
+/// Follows the system default output device: unplugging headphones, switching to a different
+/// speaker/headset, or any other default-device change is picked up via
+/// <see cref="IMMNotificationClient"/> and the WASAPI output is rebound to the new device -
+/// <see cref="_mixer"/>/<see cref="_volumeProvider"/> and every already-decoded sample stay
+/// exactly as they are, only the output endpoint is swapped. Without this, playback would
+/// silently keep going to whatever device was default at startup even after the user switches.
 /// </summary>
 public sealed class NAudioEngine : IAudioEngine
 {
@@ -21,10 +30,17 @@ public sealed class NAudioEngine : IAudioEngine
     /// so this is rarely if ever hit during real typing.</summary>
     private const int MaxConcurrentVoices = 48;
 
-    private readonly WasapiOut _output;
     private readonly MixingSampleProvider _mixer;
     private readonly VolumeSampleProvider _volumeProvider;
     private readonly SampleSelector<LoadedSample> _sampleSelector = new();
+
+    // Null only when no audio output device is available at all (e.g. everything unplugged) -
+    // Play() keeps working in that state, it just has nothing to feed, per the "an unavailable
+    // audio device must never crash the app" requirement.
+    private readonly object _outputLock = new();
+    private WasapiOut? _output;
+    private MMDeviceEnumerator? _deviceEnumerator;
+    private DeviceChangeNotifier? _deviceNotifier;
 
     private IReadOnlyDictionary<SoundCategory, IReadOnlyList<LoadedSample>> _loadedSamples =
         new Dictionary<SoundCategory, IReadOnlyList<LoadedSample>>();
@@ -50,11 +66,77 @@ public sealed class NAudioEngine : IAudioEngine
         _mixer = new MixingSampleProvider(CanonicalFormat) { ReadFully = true };
         _volumeProvider = new VolumeSampleProvider(_mixer) { Volume = 0.8f };
 
-        // Short, event-synced latency: keeps keypress-to-sound delay low without the
-        // instability that comes from pushing exclusive-mode/very small buffers too hard.
-        _output = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, useEventSync: true, latency: 40);
-        _output.Init(_volumeProvider);
-        _output.Play();
+        _output = CreateOutput();
+
+        // Best-effort: if this fails (rare COM/driver issue), the engine still works with
+        // whatever device was default at startup, it just won't follow later device changes.
+        try
+        {
+            _deviceEnumerator = new MMDeviceEnumerator();
+            _deviceNotifier = new DeviceChangeNotifier(this);
+            _deviceEnumerator.RegisterEndpointNotificationCallback(_deviceNotifier);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"Could not register for audio device change notifications: {ex.Message}");
+        }
+    }
+
+    /// <summary>Short, event-synced latency: keeps keypress-to-sound delay low without the
+    /// instability that comes from pushing exclusive-mode/very small buffers too hard. Returns
+    /// null (never throws) if no output device is currently available - Play() degrades to a
+    /// silent no-op rather than the app crashing or failing to start.</summary>
+    private WasapiOut? CreateOutput()
+    {
+        try
+        {
+            var output = new WasapiOut(AudioClientShareMode.Shared, useEventSync: true, latency: 40);
+            output.Init(_volumeProvider);
+            output.Play();
+            return output;
+        }
+        catch (Exception ex)
+        {
+            Log.Error("Failed to initialize an audio output device. Sound will be unavailable until a device becomes available.", ex);
+            return null;
+        }
+    }
+
+    /// <summary>Called (via <see cref="DeviceChangeNotifier"/>, on an arbitrary COM callback
+    /// thread) whenever the system default playback device changes. Rebinds output to the new
+    /// device; the mixer, volume, and every already-decoded sample are untouched, so no
+    /// soundpack reload is needed.</summary>
+    private void OnDefaultDeviceChanged()
+    {
+        if (_disposed) return;
+        lock (_outputLock)
+        {
+            if (_disposed) return;
+            var old = _output;
+            _output = CreateOutput();
+            if (_output is not null)
+                Log.Info("Default audio output device changed - playback switched to the new device.");
+            try { old?.Stop(); } catch { /* best-effort */ }
+            old?.Dispose();
+        }
+    }
+
+    private sealed class DeviceChangeNotifier : IMMNotificationClient
+    {
+        private readonly NAudioEngine _owner;
+        public DeviceChangeNotifier(NAudioEngine owner) => _owner = owner;
+
+        public void OnDefaultDeviceChanged(DataFlow flow, Role role, string defaultDeviceId)
+        {
+            // Multimedia role matches what WasapiOut's parameterless device selection uses.
+            if (flow == DataFlow.Render && role == Role.Multimedia)
+                _owner.OnDefaultDeviceChanged();
+        }
+
+        public void OnDeviceAdded(string pwstrDeviceId) { }
+        public void OnDeviceRemoved(string deviceId) { }
+        public void OnDeviceStateChanged(string deviceId, DeviceState newState) { }
+        public void OnPropertyValueChanged(string pwstrDeviceId, PropertyKey key) { }
     }
 
     public void LoadPack(SoundPackInfo pack)
@@ -147,15 +229,20 @@ public sealed class NAudioEngine : IAudioEngine
     {
         if (_disposed) return;
         _disposed = true;
-        try
+
+        if (_deviceEnumerator is not null && _deviceNotifier is not null)
         {
-            _output.Stop();
+            try { _deviceEnumerator.UnregisterEndpointNotificationCallback(_deviceNotifier); }
+            catch { /* best-effort */ }
         }
-        catch
+        _deviceEnumerator?.Dispose();
+
+        lock (_outputLock)
         {
-            // best-effort shutdown
+            try { _output?.Stop(); }
+            catch { /* best-effort shutdown */ }
+            _output?.Dispose();
         }
-        _output.Dispose();
     }
 
     /// <summary>Wraps a voice so the engine's active-voice counter decrements the moment

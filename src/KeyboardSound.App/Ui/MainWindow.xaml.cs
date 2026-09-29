@@ -74,6 +74,7 @@ public partial class MainWindow : Window
             CustomKeysRadio.IsChecked = settings.KeyMode == KeyMode.CustomKeys;
             CustomKeysPanel.Visibility = settings.KeyMode == KeyMode.CustomKeys ? Visibility.Visible : Visibility.Collapsed;
             RefreshCustomKeysPanel();
+            RefreshCustomKeySoundsSummary();
 
             StartWithWindowsCheckBox.IsChecked = StartupManager.IsEnabled();
             WidgetVisibleCheckBox.IsChecked = settings.WidgetVisible;
@@ -81,11 +82,67 @@ public partial class MainWindow : Window
 
             RefreshPackList();
             RefreshSoundList();
+            RefreshStatistics();
         }
         finally
         {
             _isInitializing = false;
         }
+    }
+
+    private void RefreshStatistics()
+    {
+        var stats = _appState.Stats;
+        StatKeyPressesText.Text = stats.Current.TotalKeyPresses.ToString("N0");
+        StatMostUsedKeyText.Text = stats.MostUsedKey ?? "-";
+
+        var usage = stats.TotalUsageTime;
+        StatUsageTimeText.Text = usage.TotalHours >= 1
+            ? $"{(int)usage.TotalHours}h {usage.Minutes}m"
+            : $"{(int)usage.TotalMinutes}m";
+
+        var favoritePackId = _appState.Settings.Current.FavoriteSoundPackIds.FirstOrDefault();
+        var favoritePack = favoritePackId is null
+            ? null
+            : _appState.AvailablePacks.FirstOrDefault(p => p.Id == favoritePackId);
+        StatFavoritePackText.Text = favoritePack?.Metadata.Name ?? "None yet";
+    }
+
+    private void ResetStatistics_Click(object sender, RoutedEventArgs e)
+    {
+        var result = System.Windows.MessageBox.Show(
+            this,
+            "Reset key press count, most used key, and usage time? This never affects your sounds, packs, favorites, or other settings.",
+            "Reset Statistics",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+        if (result != MessageBoxResult.Yes) return;
+
+        _appState.Stats.Reset();
+        RefreshStatistics();
+    }
+
+    private void RunSetupAgain_Click(object sender, RoutedEventArgs e)
+    {
+        var onboarding = new OnboardingWindow(_appState) { Owner = this };
+        onboarding.WidgetVisibilityRequested += visible => WidgetVisibilityRequested?.Invoke(visible);
+        onboarding.ShowDialog();
+        LoadFromState();
+    }
+
+    private void RefreshCustomKeySoundsSummary()
+    {
+        var count = _appState.Settings.Current.CustomKeySounds.Count;
+        CustomKeySoundsSummaryText.Text = count == 0
+            ? "Give any key its own sound - it'll play that instead of your global sound."
+            : $"{count} key{(count == 1 ? "" : "s")} currently {(count == 1 ? "has" : "have")} its own sound.";
+    }
+
+    private void OpenKeyboardEditor_Click(object sender, RoutedEventArgs e)
+    {
+        var editor = new KeyboardEditorWindow(_appState) { Owner = this };
+        editor.ShowDialog();
+        RefreshCustomKeySoundsSummary();
     }
 
     private void RefreshSoundList()
@@ -407,6 +464,7 @@ public partial class MainWindow : Window
 
         if (_appState.AvailablePacks.Any(p => p.RootPath == destDir))
         {
+            _appState.Stats.RecordSoundpackImported();
             RefreshPackList();
             ShowSoundpackImportStatus($"Added soundpack '{folderName}'.");
         }

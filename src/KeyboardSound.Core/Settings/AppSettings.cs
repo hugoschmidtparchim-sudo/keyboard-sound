@@ -31,6 +31,19 @@ public sealed class AppSettings
     /// <summary>Only consulted when <see cref="KeyMode"/> is <see cref="Settings.KeyMode.CustomKeys"/>.</summary>
     public List<LogicalKey> EnabledKeys { get; set; } = new();
 
+    /// <summary>Per-key sound overrides from the visual Keyboard Editor, keyed by
+    /// <see cref="LogicalKey"/> name (string, not the enum itself, for the same reason
+    /// <see cref="Stats.UsageStats.KeyPressCountByKey"/> uses string keys - dictionary keys of
+    /// enum type don't reliably round-trip through System.Text.Json the same way a
+    /// JsonStringEnumConverter-decorated value does). Value is a stable
+    /// <see cref="SoundPacks.Sound.Id"/>. A key with no entry here plays whatever
+    /// <see cref="SelectedSoundId"/>/category-pool selection would already produce - this is a
+    /// strictly additive override layer independent of <see cref="KeyMode"/> and
+    /// <see cref="EnabledKeys"/>, which keep gating *whether* a key makes sound exactly as
+    /// before; this only changes *which* sound plays once that gate has already passed. See
+    /// <see cref="Routing.InputRouter"/>.</summary>
+    public Dictionary<string, string> CustomKeySounds { get; set; } = new();
+
     /// <summary>Favorited whole soundpacks, by stable pack id (not display name or list
     /// position).</summary>
     public List<string> FavoriteSoundPackIds { get; set; } = new();
@@ -58,4 +71,11 @@ public sealed class AppSettings
     public bool StartWithWindows { get; set; } = false;
 
     public bool DebugLogging { get; set; } = false;
+
+    /// <summary>Set once the first-run onboarding wizard has been completed (or explicitly
+    /// re-run via Settings). Note: whether to *show* onboarding on a given launch is decided in
+    /// App.xaml.cs by whether settings.json existed before this launch, not by this field alone
+    /// - that avoids ever showing onboarding again for an existing user just because they
+    /// upgraded to a version that added this field (see Settings Migration notes there).</summary>
+    public bool OnboardingCompleted { get; set; } = false;
 }

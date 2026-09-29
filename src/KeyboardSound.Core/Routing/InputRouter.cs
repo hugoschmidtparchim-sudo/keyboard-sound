@@ -40,7 +40,12 @@ public sealed class InputRouter : IDisposable
             return;
 
         var category = KeyCategoryMap.Resolve(evt.Key);
-        _audioEngine.Play(category, settings.SelectedSoundId);
+        // Per-key override (set via the visual Keyboard Editor) wins if this exact key has one;
+        // otherwise falls through to the existing pinned-sound/category-pool selection unchanged.
+        var preferredSoundId = settings.CustomKeySounds.TryGetValue(evt.Key.ToString(), out var customSoundId)
+            ? customSoundId
+            : settings.SelectedSoundId;
+        _audioEngine.Play(category, preferredSoundId);
     }
 
     public void Dispose()

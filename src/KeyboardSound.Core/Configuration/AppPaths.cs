@@ -17,6 +17,11 @@ public static class AppPaths
     public static string LogFilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppFolderName, "logs", "app.log");
 
+    /// <summary>Local (not roamed): usage counters are per-machine telemetry, not a user
+    /// preference that should follow the user's profile the way settings.json does.</summary>
+    public static string StatsFilePath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppFolderName, "stats.json");
+
     /// <summary>Soundpacks shipped alongside the app (copied to the output/publish directory).</summary>
     public static string BuiltInSoundPacksDirectory => Path.Combine(AppContext.BaseDirectory, "soundpacks");
 

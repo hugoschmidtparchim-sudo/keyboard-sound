@@ -3,221 +3,334 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:KeyboardSound.App.Ui"
         Title="Keyboard Sound"
-        Width="440" Height="680"
-        MinWidth="380" MinHeight="480"
+        Width="460" Height="700"
+        MinWidth="400" MinHeight="480"
         Background="{StaticResource BackgroundBrush}"
         Foreground="{StaticResource TextPrimaryBrush}"
         FontFamily="{StaticResource AppFontFamily}"
         WindowStartupLocation="CenterScreen"
         Closing="Window_Closing">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="18">
-        <StackPanel>
-
+    <DockPanel Margin="18">
+        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,14">
             <TextBlock Text="Keyboard Sound" Style="{StaticResource TitleTextStyle}" FontSize="20" Margin="0,0,0,4"/>
             <TextBlock Text="Runs in the background - the widget on your desktop is the quick control."
-                       Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"/>
-
-            <!-- CURRENT SOUND -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="CURRENT SOUND" Style="{StaticResource SectionHeaderStyle}"/>
-                    <TextBlock x:Name="CurrentPackNameText" Style="{StaticResource TitleTextStyle}"/>
-                    <TextBlock x:Name="CurrentPackDescriptionText" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,4,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- VOLUME -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <TextBlock Text="VOLUME" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
-                        <TextBlock x:Name="VolumeValueText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
-                    </Grid>
-                    <Slider x:Name="VolumeSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
-                            ValueChanged="VolumeSlider_ValueChanged"/>
-                </StackPanel>
-            </Border>
-
-            <!-- SOUND ON/OFF -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="SOUND" Style="{StaticResource SectionHeaderStyle}"/>
-                        <TextBlock Text="Toggle keyboard sound playback on or off." Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
-                    </StackPanel>
-                    <CheckBox x:Name="SoundEnabledCheckBox" Grid.Column="1" VerticalAlignment="Center"
-                              Content="Enabled" Foreground="{StaticResource TextPrimaryBrush}"
-                              Checked="SoundEnabledCheckBox_Changed" Unchecked="SoundEnabledCheckBox_Changed"/>
-                </Grid>
-            </Border>
-
-            <!-- KEY MODE -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="KEY MODE" Style="{StaticResource SectionHeaderStyle}"/>
-                    <RadioButton x:Name="AllKeysRadio" Content="All Keys" GroupName="KeyMode"
-                                 Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"
-                                 Checked="KeyModeRadio_Changed"/>
-                    <RadioButton x:Name="CustomKeysRadio" Content="Custom Keys" GroupName="KeyMode"
-                                 Foreground="{StaticResource TextPrimaryBrush}"
-                                 Checked="KeyModeRadio_Changed"/>
-
-                    <StackPanel x:Name="CustomKeysPanel" Margin="0,10,0,0" Visibility="Collapsed">
-                        <TextBlock Text="Sounds play only for the keys enabled below."
-                                   Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                        <WrapPanel x:Name="CustomKeysWrapPanel"/>
-                    </StackPanel>
-                </StackPanel>
-            </Border>
-
-            <!-- SOUND PACKS -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <TextBlock Text="SOUND PACKS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <TextBlock Text="star = favorite" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                            <Button Content="Add Soundpack..." Click="AddSoundpack_Click"
-                                    Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11"/>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock x:Name="SoundpackImportStatusText" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,0,0,8" Visibility="Collapsed"/>
-                    <ItemsControl x:Name="SoundPackList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type ui:SoundPackRow}">
-                                <Border Style="{StaticResource ListRowStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Name}" Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
-                                            <TextBlock Text="{Binding SampleCount, StringFormat='{}{0} samples'}"
-                                                       Style="{StaticResource MutedTextStyle}"/>
-                                        </StackPanel>
-
-                                        <Button Grid.Column="1" Tag="{Binding Id}" Click="FavoriteButton_Click"
-                                                Width="32" Height="32" Margin="0,0,8,0"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
-                                                FontSize="16" Foreground="{StaticResource AccentBrush}"/>
-
-                                        <Button Grid.Column="2" Tag="{Binding Id}" Click="ActivateButton_Click"
-                                                Content="{Binding IsActive, Converter={StaticResource ActiveLabelConverter}}"
-                                                Style="{StaticResource GhostButtonStyle}"
-                                                IsEnabled="{Binding IsActive, Converter={StaticResource InverseBoolConverter}}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </StackPanel>
-            </Border>
-
-            <!-- SOUNDS (individual samples within the active pack) -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <Grid Margin="0,0,0,8">
-                        <TextBlock Text="SOUNDS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                            <Button x:Name="ShowAllSoundsButton" Content="All" Click="ShowAllSounds_Click"
-                                    Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11" Margin="0,0,4,0"/>
-                            <Button x:Name="ShowFavoriteSoundsButton" Content="Favorites" Click="ShowFavoriteSounds_Click"
-                                    Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11"/>
-                        </StackPanel>
-                    </Grid>
-                    <TextBlock Text="Pick which sound plays for normal keys. Star to favorite, click a name to select it as your pinned sound."
-                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                    <ItemsControl x:Name="SoundList">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate DataType="{x:Type ui:SoundRow}">
-                                <Border Style="{StaticResource ListRowStyle}">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <Button Grid.Column="0" Tag="{Binding Id}" Click="FavoriteSoundButton_Click"
-                                                Width="28" Height="28" Margin="0,0,4,0"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
-                                                FontSize="15" Foreground="{StaticResource AccentBrush}"/>
-
-                                        <Button Grid.Column="1" Tag="{Binding Id}" Click="PreviewSoundButton_Click"
-                                                Width="28" Height="28" Margin="0,0,8,0"
-                                                Background="Transparent" BorderThickness="0" Cursor="Hand"
-                                                Content="&#x25B6;" ToolTip="Preview this sound"
-                                                FontSize="11" Foreground="{StaticResource TextPrimaryBrush}"/>
-
-                                        <TextBlock Grid.Column="2" Text="{Binding DisplayName}"
-                                                   Style="{StaticResource BodyTextStyle}" VerticalAlignment="Center"
-                                                   Cursor="Hand" MouseLeftButtonUp="SoundName_MouseLeftButtonUp" Tag="{Binding Id}"/>
-
-                                        <Button Grid.Column="3" Tag="{Binding Id}" Click="SelectSoundButton_Click"
-                                                Content="{Binding IsSelected, Converter={StaticResource SelectedLabelConverter}}"
-                                                Style="{StaticResource GhostButtonStyle}"
-                                                IsEnabled="{Binding IsSelected, Converter={StaticResource InverseBoolConverter}}"/>
-                                    </Grid>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                    <TextBlock x:Name="NoSoundsText" Text="No favorites yet - star a sound to see it here."
-                               Style="{StaticResource MutedTextStyle}" Visibility="Collapsed" Margin="0,4,0,0"/>
-                </StackPanel>
-            </Border>
-
-            <!-- SETTINGS -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="SETTINGS" Style="{StaticResource SectionHeaderStyle}"/>
-
-                    <CheckBox x:Name="StartWithWindowsCheckBox" Content="Start with Windows"
-                              Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"
-                              Checked="StartWithWindowsCheckBox_Changed" Unchecked="StartWithWindowsCheckBox_Changed"/>
-
-                    <CheckBox x:Name="WidgetVisibleCheckBox" Content="Show desktop widget"
-                              Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"
-                              Checked="WidgetVisibleCheckBox_Changed" Unchecked="WidgetVisibleCheckBox_Changed"/>
-
-                    <CheckBox x:Name="DebugLoggingCheckBox" Content="Debug logging"
-                              Foreground="{StaticResource TextPrimaryBrush}"
-                              Checked="DebugLoggingCheckBox_Changed" Unchecked="DebugLoggingCheckBox_Changed"/>
-                </StackPanel>
-            </Border>
-
-            <!-- BACKUP -->
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
-                <StackPanel>
-                    <TextBlock Text="BACKUP" Style="{StaticResource SectionHeaderStyle}"/>
-                    <TextBlock Text="Export your settings, favorites and preferences to a file, or restore them from one. Sound files are never included."
-                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
-                    <StackPanel Orientation="Horizontal">
-                        <Button Content="Export Settings" Click="ExportSettings_Click"
-                                Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="0,0,8,0"/>
-                        <Button Content="Import Settings" Click="ImportSettings_Click"
-                                Style="{StaticResource GhostButtonStyle}" Padding="10,6"/>
-                    </StackPanel>
-                    <TextBlock x:Name="BackupStatusText" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
-                </StackPanel>
-            </Border>
-
-            <TextBlock x:Name="VersionText" Style="{StaticResource MutedTextStyle}"
-                       HorizontalAlignment="Center" Margin="0,4,0,0"/>
-
+                       Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
         </StackPanel>
-    </ScrollViewer>
+
+        <TabControl SelectedIndex="0">
+            <!-- GENERAL -->
+            <TabItem Header="General">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <!-- CURRENT SOUND -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="CURRENT SOUND" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock x:Name="CurrentPackNameText" Style="{StaticResource TitleTextStyle}"/>
+                                <TextBlock x:Name="CurrentPackDescriptionText" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- VOLUME -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="VOLUME" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="VolumeValueText" Style="{StaticResource MutedTextStyle}" HorizontalAlignment="Right"/>
+                                </Grid>
+                                <Slider x:Name="VolumeSlider" Minimum="0" Maximum="1" SmallChange="0.01" LargeChange="0.1"
+                                        ValueChanged="VolumeSlider_ValueChanged"/>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SOUND ON/OFF -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="SOUND" Style="{StaticResource SectionHeaderStyle}"/>
+                                    <TextBlock Text="Toggle keyboard sound playback on or off." Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox x:Name="SoundEnabledCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                                          Content="Enabled" Foreground="{StaticResource TextPrimaryBrush}"
+                                          Checked="SoundEnabledCheckBox_Changed" Unchecked="SoundEnabledCheckBox_Changed"/>
+                            </Grid>
+                        </Border>
+
+                        <!-- SETTINGS -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="SETTINGS" Style="{StaticResource SectionHeaderStyle}"/>
+
+                                <CheckBox x:Name="StartWithWindowsCheckBox" Content="Start with Windows"
+                                          Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,8"
+                                          Checked="StartWithWindowsCheckBox_Changed" Unchecked="StartWithWindowsCheckBox_Changed"/>
+
+                                <CheckBox x:Name="DebugLoggingCheckBox" Content="Debug logging"
+                                          Foreground="{StaticResource TextPrimaryBrush}"
+                                          Checked="DebugLoggingCheckBox_Changed" Unchecked="DebugLoggingCheckBox_Changed"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- SOUNDS -->
+            <TabItem Header="Sounds">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <!-- SOUND PACKS -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="SOUND PACKS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <TextBlock Text="star = favorite" Style="{StaticResource MutedTextStyle}" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <Button Content="Add Soundpack..." Click="AddSoundpack_Click"
+                                                Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock x:Name="SoundpackImportStatusText" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,0,0,8" Visibility="Collapsed"/>
+                                <ItemsControl x:Name="SoundPackList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type ui:SoundPackRow}">
+                                            <Border Style="{StaticResource ListRowStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" Style="{StaticResource BodyTextStyle}" FontWeight="SemiBold"/>
+                                                        <TextBlock Text="{Binding SampleCount, StringFormat='{}{0} samples'}"
+                                                                   Style="{StaticResource MutedTextStyle}"/>
+                                                    </StackPanel>
+
+                                                    <Button Grid.Column="1" Tag="{Binding Id}" Click="FavoriteButton_Click"
+                                                            Width="32" Height="32" Margin="0,0,8,0"
+                                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                            Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
+                                                            FontSize="16" Foreground="{StaticResource AccentBrush}"/>
+
+                                                    <Button Grid.Column="2" Tag="{Binding Id}" Click="ActivateButton_Click"
+                                                            Content="{Binding IsActive, Converter={StaticResource ActiveLabelConverter}}"
+                                                            Style="{StaticResource GhostButtonStyle}"
+                                                            IsEnabled="{Binding IsActive, Converter={StaticResource InverseBoolConverter}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- SOUNDS (individual samples within the active pack) -->
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,8">
+                                    <TextBlock Text="SOUNDS" Style="{StaticResource SectionHeaderStyle}" HorizontalAlignment="Left"/>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                        <Button x:Name="ShowAllSoundsButton" Content="All" Click="ShowAllSounds_Click"
+                                                Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11" Margin="0,0,4,0"/>
+                                        <Button x:Name="ShowFavoriteSoundsButton" Content="Favorites" Click="ShowFavoriteSounds_Click"
+                                                Style="{StaticResource GhostButtonStyle}" Padding="10,4" FontSize="11"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="Pick which sound plays for normal keys. Play to preview, star to favorite, click a name to select it as your pinned sound."
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <ItemsControl x:Name="SoundList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate DataType="{x:Type ui:SoundRow}">
+                                            <Border Style="{StaticResource ListRowStyle}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Button Grid.Column="0" Tag="{Binding Id}" Click="FavoriteSoundButton_Click"
+                                                            Width="28" Height="28" Margin="0,0,4,0"
+                                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                            Content="{Binding IsFavorite, Converter={StaticResource FavoriteGlyphConverter}}"
+                                                            FontSize="15" Foreground="{StaticResource AccentBrush}"/>
+
+                                                    <Button Grid.Column="1" Tag="{Binding Id}" Click="PreviewSoundButton_Click"
+                                                            Width="28" Height="28" Margin="0,0,8,0"
+                                                            Background="Transparent" BorderThickness="0" Cursor="Hand"
+                                                            Content="&#x25B6;" ToolTip="Preview this sound"
+                                                            FontSize="11" Foreground="{StaticResource TextPrimaryBrush}"/>
+
+                                                    <TextBlock Grid.Column="2" Text="{Binding DisplayName}"
+                                                               Style="{StaticResource BodyTextStyle}" VerticalAlignment="Center"
+                                                               Cursor="Hand" MouseLeftButtonUp="SoundName_MouseLeftButtonUp" Tag="{Binding Id}"/>
+
+                                                    <Button Grid.Column="3" Tag="{Binding Id}" Click="SelectSoundButton_Click"
+                                                            Content="{Binding IsSelected, Converter={StaticResource SelectedLabelConverter}}"
+                                                            Style="{StaticResource GhostButtonStyle}"
+                                                            IsEnabled="{Binding IsSelected, Converter={StaticResource InverseBoolConverter}}"/>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                                <TextBlock x:Name="NoSoundsText" Text="No favorites yet - star a sound to see it here."
+                                           Style="{StaticResource MutedTextStyle}" Visibility="Collapsed" Margin="0,4,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- KEYBOARD -->
+            <TabItem Header="Keyboard">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="KEY MODE" Style="{StaticResource SectionHeaderStyle}"/>
+                                <RadioButton x:Name="AllKeysRadio" Content="All Keys" GroupName="KeyMode"
+                                             Foreground="{StaticResource TextPrimaryBrush}" Margin="0,0,0,6"
+                                             Checked="KeyModeRadio_Changed"/>
+                                <RadioButton x:Name="CustomKeysRadio" Content="Custom Keys" GroupName="KeyMode"
+                                             Foreground="{StaticResource TextPrimaryBrush}"
+                                             Checked="KeyModeRadio_Changed"/>
+
+                                <StackPanel x:Name="CustomKeysPanel" Margin="0,10,0,0" Visibility="Collapsed">
+                                    <TextBlock Text="Sounds play only for the keys enabled below."
+                                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                    <WrapPanel x:Name="CustomKeysWrapPanel"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="INDIVIDUAL KEY SOUNDS" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock x:Name="CustomKeySoundsSummaryText" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <Button Content="Open Keyboard Editor..." Click="OpenKeyboardEditor_Click"
+                                        Style="{StaticResource GhostButtonStyle}" Padding="10,6" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- WIDGET -->
+            <TabItem Header="Widget">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="DESKTOP WIDGET" Style="{StaticResource SectionHeaderStyle}"/>
+                                    <TextBlock Text="The small draggable icon that stays on your desktop. Drag it anywhere - its position is remembered."
+                                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <CheckBox x:Name="WidgetVisibleCheckBox" Grid.Column="1" VerticalAlignment="Center"
+                                          Content="Show" Foreground="{StaticResource TextPrimaryBrush}"
+                                          Checked="WidgetVisibleCheckBox_Changed" Unchecked="WidgetVisibleCheckBox_Changed"/>
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- STATISTICS -->
+            <TabItem Header="Stats">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="USAGE" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock Text="Local only - never leaves this PC, and never records what you actually type."
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,12"/>
+
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="Total key presses" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="StatKeyPressesText" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="Most used key" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="StatMostUsedKeyText" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,10">
+                                    <TextBlock Text="Total usage time" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="StatUsageTimeText" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </Grid>
+                                <Grid Margin="0,0,0,4">
+                                    <TextBlock Text="Favorite soundpack" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Left"/>
+                                    <TextBlock x:Name="StatFavoritePackText" Style="{StaticResource BodyTextStyle}" HorizontalAlignment="Right" FontWeight="SemiBold"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Resetting clears the counters above. It never affects your sounds, packs, favorites or other settings."
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"/>
+                                <Button Content="Reset Statistics" Click="ResetStatistics_Click"
+                                        Style="{StaticResource GhostButtonStyle}" Padding="10,6" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+
+            <!-- ABOUT -->
+            <TabItem Header="About">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel>
+
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="BACKUP" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock Text="Export your settings, favorites and preferences to a file, or restore them from one. Sound files are never included."
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Export Settings" Click="ExportSettings_Click"
+                                            Style="{StaticResource GhostButtonStyle}" Padding="10,6" Margin="0,0,8,0"/>
+                                    <Button Content="Import Settings" Click="ImportSettings_Click"
+                                            Style="{StaticResource GhostButtonStyle}" Padding="10,6"/>
+                                </StackPanel>
+                                <TextBlock x:Name="BackupStatusText" Style="{StaticResource MutedTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,8,0,0" Visibility="Collapsed"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="SETUP" Style="{StaticResource SectionHeaderStyle}"/>
+                                <TextBlock Text="Re-run the first-time setup wizard (choose sound, keyboard mode, widget, startup)."
+                                           Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                                <Button Content="Run Setup Again" Click="RunSetupAgain_Click"
+                                        Style="{StaticResource GhostButtonStyle}" Padding="10,6" HorizontalAlignment="Left"/>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock x:Name="VersionText" Style="{StaticResource MutedTextStyle}"
+                                   HorizontalAlignment="Center" Margin="0,4,0,0"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </TabItem>
+        </TabControl>
+    </DockPanel>
 </Window>
